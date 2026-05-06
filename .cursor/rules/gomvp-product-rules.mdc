@@ -1,0 +1,170 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Product, architecture, MCP and development rules for GoMVP
+alwaysApply: true
+---
+
+# GoMVP / Built2Go Rules
+
+You are working on GoMVP, an internal web-first tool from Built2Go.
+
+GoMVP is an automation-first radar for capturing market signals and generating B2C microproduct ideas with evidence.
+
+The goal is NOT to validate markets automatically. AI scores are only prioritization signals. Real validation requires clicks, signups, usage, return behavior, payment or sharing.
+
+## Product principles
+
+- Build simple, fast, low-support B2C microproduct infrastructure.
+- Prioritize utility apps, AI tools, calculators, generators, checkers, organizers and narrow tools.
+- Avoid marketplaces, social networks, native mobile apps, heavy support, enterprise workflows, high customization and complex integrations before validation.
+- One person must be able to operate the product.
+- The product must be web-first.
+- Favor operational simplicity over technical sophistication.
+- Do not overengineer.
+
+## GoMVP V1 scope
+
+The V1 must be automation-first.
+
+Core flow:
+1. Collect signals from configured sources.
+2. Normalize raw items.
+3. Deduplicate items.
+4. Filter spam, weak signals and irrelevant news.
+5. Use AI to extract pains, desires, complaints and opportunity signals.
+6. Cluster similar signals.
+7. Generate candidate B2C microproduct ideas.
+8. Score each idea.
+9. Show daily/weekly ranking with up to 30 ideas.
+10. Let the human operator approve, reject or mark ideas as promising.
+11. Generate MVP brief only for approved ideas.
+12. Use feedback to improve ranking through rules, weights and examples, without training a custom model in V1.
+
+## V1 preferred sources
+
+Prioritize viable, cheap, stable and low-risk sources:
+- Product Hunt API
+- Hacker News API / Algolia HN
+- RSS feeds
+- Apple RSS rankings
+- Stack Exchange API
+- Manual signal entry as auxiliary input only
+
+Do not depend on:
+- heavy scraping
+- Reddit as a core V1 source
+- YouTube comments at scale
+- Google Trends as mandatory dependency
+- Google Play/App Store review scraping
+- private or logged-in sources
+
+## MCP usage rules
+
+Use MCP tools only when they add concrete value.
+
+Allowed MCP usage:
+- Context7 MCP for current framework/library/API documentation.
+- Supabase/Postgres MCP only on development database.
+- GitHub MCP only for repository, issues, branches and PRs.
+- Playwright MCP only for local UI testing.
+- Figma MCP only if a Figma design is explicitly provided.
+
+Before using MCP:
+1. List which MCP tools are available.
+2. Explain why each tool is needed.
+3. Do not use write/destructive tools without explicit approval.
+
+Forbidden MCP behavior:
+- Never access production data.
+- Never run destructive database operations without approval.
+- Never apply migrations without showing the SQL first.
+- Never push commits without approval.
+- Never open PRs without approval.
+- Never use browser/scraping MCPs to bypass website terms or rate limits.
+- Never store unnecessary personal data.
+- Never use unknown or untrusted MCP servers.
+- Prefer read-only access whenever possible.
+
+## Required idea output
+
+Each idea must include:
+- provisional name
+- detected pain
+- likely audience
+- evidence/signals
+- source URLs
+- clear promise
+- product type
+- possible MVP
+- acquisition channel
+- monetization
+- expected support level
+- legal/LGPD risk
+- build difficulty
+- distribution potential
+- total score
+- score justification
+- recommended next step
+
+## Approved idea MVP brief
+
+For approved ideas, generate:
+- MVP objective
+- hypothesis
+- target audience
+- promise
+- minimum screens
+- minimum features
+- suggested stack
+- landing copy
+- CTA
+- test channels
+- metrics
+- kill / iterate / scale criteria
+- technical risks
+- API costs
+- limitations
+- LGPD notes
+
+## Development rules
+
+Before writing production code:
+- First produce PRD.
+- Then produce technical architecture.
+- Then produce database schema.
+- Then produce implementation plan.
+- Then wait for approval before coding.
+
+Never start coding directly unless explicitly requested.
+
+When coding:
+- Use TypeScript.
+- Prefer Next.js for web app.
+- Prefer Postgres with pgvector for embeddings/similarity.
+- Keep the architecture modular but simple.
+- Avoid premature abstractions.
+- Log all collector runs and AI operations.
+- Keep prompts versioned.
+- Keep scoring weights configurable.
+- Make costs visible where AI/API usage exists.
+- Use structured JSON outputs for AI calls.
+- Validate and sanitize external data.
+- Store original source URL for traceability.
+- Avoid storing unnecessary personal data.
+- Respect LGPD principles: purpose limitation, minimization, necessity and transparency.
+
+## Decision rule
+
+When there is a tradeoff, choose:
+1. lower operational complexity
+2. lower legal/API risk
+3. faster validation
+4. lower support burden
+5. simpler codebase
+
+
+Do not optimize for scale before proving the pipeline generates useful ideas.
