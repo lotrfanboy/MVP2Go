@@ -15,11 +15,11 @@
 
 | Campo | Valor |
 |---|---|
-| **Current phase** | F3 — Painel + Ações **(DONE, `approved_with_minors`)**. Próxima fase prevista: F4 (sob aprovação). |
+| **Current phase** | Pós-F3 QA concluído (`approved_with_minors`). Próxima fase prevista: F4 (sob aprovação do operador). |
 | **Last completed phase** | F3 — Painel + Ações |
-| **Active agent** | Agent 0 (Orchestrator) — auditando entrega da F3 |
-| **Last reviewer agent** | Agent 5 — fechou F3 com `approved_with_minors` |
-| **Current branch** | `main` (1 commit publicado: `41c6212`; mudanças da F3 ainda **não** commitadas — aguardando aprovação do operador) |
+| **Active agent** | Agent 0 (Orchestrator) — consolidando pós-QA e preparando entrada da F4 |
+| **Last reviewer agent** | Agent 5 — fechou QA estruturado de F3 com `approved_with_minors` |
+| **Current branch** | `main` (`41c6212` + `713d773` + `d2dc898`, push concluído em `origin/main`) |
 | **Last updated** | 2026-05-06 |
 
 ## Status por fase
@@ -29,7 +29,7 @@
 | F0 — Fundação | [`agents/AGENT_2_F0_FUNDACAO.md`](agents/AGENT_2_F0_FUNDACAO.md) | [`handback/F0_DONE.md`](handback/F0_DONE.md) | [`handback/F0_REVIEW.md`](handback/F0_REVIEW.md) | DONE (`approved_with_minors`) |
 | F1 — Coleta HN | [`agents/AGENT_3_F1_COLETA_HN.md`](agents/AGENT_3_F1_COLETA_HN.md) | [`handback/F1_DONE.md`](handback/F1_DONE.md) | [`handback/F1_REVIEW.md`](handback/F1_REVIEW.md) | DONE (`approved_with_minors`) |
 | F2 — IA + Ideias | [`agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | [`handback/F2_DONE.md`](handback/F2_DONE.md) | [`handback/F2_REVIEW.md`](handback/F2_REVIEW.md) | DONE (`approved_with_minors`) |
-| F3 — Painel + Ações | Agent 6 — UI/UX ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) | DONE (`approved_with_minors`) |
+| F3 — Painel + Ações | Agent 6 — UI/UX ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) + [`handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) + [`handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md) | DONE (`approved_with_minors`) |
 | F4 — Feedback + Brief | a definir | — | — | PENDING |
 | F5 — Hardening | a definir | — | — | PENDING |
 
@@ -109,7 +109,7 @@ Nenhum trabalho de fase em andamento. F3 fechada (`approved_with_minors`). Aguar
 
 ## Reviews pendentes
 
-Nenhuma review pendente.
+Nenhuma review pendente. O ciclo extra de QA estruturado de F3 também foi revisado pelo Agent 5.
 
 ## Blockers conhecidos
 
@@ -117,31 +117,29 @@ Nenhuma review pendente.
 - **B-02** — ~~Documentação produto desatualizada (F0 vs F2).~~ **Resolvido em 2026-05-05**.
 - **B-03** — ~~Figma MCP não configurado.~~ **Mitigado**: F3 entregue sem Figma MCP, com base em Figma Make + brief textual (registrado como desvio aceito no F3_DONE §11).
 - **B-04** — ~~Arquivo Figma ainda não existe.~~ **Mitigado**: idem B-03.
-- **B-05** — **Mudanças da F3 ainda não commitadas em git.** `git status` mostra ~30 arquivos novos/modificados. Aguardando aprovação explícita do operador para commit + push (DP-03).
-- **B-06** — **PRD §3 alterado fora do escopo permitido.** `git diff docs/PRD.md` mostra que o KPI canônico `Custo IA real ≤ US$ 50/mês` foi alterado para `≤ US$ 5/mês` (commit ainda não realizado, alteração local). Isso contradiz **D-01** (hard cap US$ 50/mês como decisão de produto) e confunde KPI de produção com override de dev (**O-01**). Nenhum agente de fase (Agent 6) ou QA (Agent 5) tem permissão para alterar PRD. **Recomendação ao operador: reverter manualmente o trecho do §3 antes de qualquer commit.** Comando sugerido: `git checkout -- docs/PRD.md`.
+- **B-05** — ~~Mudanças da F3 ainda não commitadas em git.~~ **Resolvido** em 2026-05-06 (`713d773`, `d2dc898`, push em `origin/main`).
+- **B-06** — ~~PRD §3 alterado fora do escopo permitido.~~ **Resolvido** em 2026-05-06 antes do commit da F3 (KPI canônico restaurado para US$ 50/mês).
 
 ## Riscos conhecidos
 
 - **R-01** ~~Scope creep em F3.~~ **Verificado**: nenhuma fase futura adiantada. F3 ficou dentro do escopo do brief.
 - **R-02** Drift de prompts versionados — sem alteração observada em F3.
 - **R-03** Divergência de budget (50 vs 5 em dev) — em vigor (O-01).
-- **R-04** Brief de Agent 7 (QA Playwright) ainda não criado. Validação E2E formal de F3 ficou parcial.
+- **R-04** ~~Validação E2E formal de F3 ainda parcial~~ **Resolvido** com `F3_QA_DONE.md` + `F3_QA_REVIEW_BY_AGENT5.md`.
 - **R-05** **Warning persistente de ESLint/Next no build** — registrado em F0/F1/F2 e agora também F3 reviews. Já é débito técnico crônico. Sugestão: tratar fora do ciclo de fases, em uma "house-cleaning task".
 - **R-06** LGPD — retenção 30/90/180/365d e endpoint de purge continuam em F5.
 - **R-07** Dependência operacional de cron — Vercel Cron é único orquestrador.
 - **R-08** **Estabilidade do dev server** — handback F3 reportou `EMAXCONNSESSION` (Postgres) e cache Next quebrado durante longas sessões. Mitigado pelo singleton em `db/index.ts` e `predev` limpando `.next`. Agent 5 confirmou que após ambiente limpo as rotas críticas respondem `200`. Risco persistente em sessões longas — observar.
-- **R-09** **KPI operacional (30 ideias revisadas em ≤30min) não comprovado** — Gate F3 não fechou esse item por falta de cronometragem manual. Não bloqueia avanço técnico. Endereçar em rodada operacional separada.
+- **R-09** ~~KPI operacional (30 ideias revisadas em ≤30min) não comprovado~~ **Resolvido** em QA estruturado de F3 (`30/30` reportado).
 - **R-10** **Snooze sem `snoozed_until`** — UI mostra "snooze" via `feedback.action='snooze'`, sem expiração automática. Limite conhecido até migration aprovada (provavelmente em F4).
 - **R-11** **Reversão de filtrada via override** — `feedback.action='unfilter_override'` mantém `blacklist_tags` intacta; é override de exibição. Garante reversão sem alterar schema, mas exige consciência de que ranking pode mostrar item filtrado se houver feedback registrado.
 
 ## Próxima ação recomendada
 
-1. Operador autoriza commit + push das mudanças da F3 (B-05).
-2. Operador decide entre 3 caminhos pós-F3:
+1. Operador decide entre 2 caminhos pós-F3:
    - **(A)** Iniciar F4 (Feedback dinâmico + Brief on-demand).
    - **(B)** Adicionar 1 coletor (PH, RSS, Apple ou Stack Exchange) antes de F4.
-   - **(C)** Rodada de QA estruturada (criar Agent 7 — Playwright) + KPI operacional cronometrado antes de qualquer evolução.
-3. Recomendação default do Agent 0: **(C) → (A)**. Fechar o débito de QA e KPI antes de habilitar feedback humano dinâmico, que tem efeito direto no ranking.
+2. Recomendação default do Agent 0, após QA estruturado concluído: **(A)**.
 
 ## Do Not Do Yet
 
@@ -158,9 +156,9 @@ Bloqueios duros até nova aprovação:
 ## Open questions
 
 - OQ-01 — ~~Git local agora ou ao iniciar F3?~~ **Resolvido** em 2026-05-06.
-- OQ-02 — Após F3, adicionar coletor antes de F4? **Pendente** (default sugerido: não, focar em F4 pós-QA).
+- OQ-02 — Após F3, adicionar coletor antes de F4? **Pendente** (default sugerido: não, focar em F4).
 - OQ-03 — ~~Figma usado? Em que nível?~~ **Resolvido** (O-05).
-- OQ-04 — **Agent 7 (QA Playwright) entra agora** (entre F3 e F4) **ou só em F4/F5?** Sem decisão. Default sugerido pelo Agent 0: **agora**, dado o débito de KPI operacional e a complexidade visual nova introduzida em F3.
+- OQ-04 — ~~Agent 7 entra agora ou só em F4/F5?~~ **Resolvido:** Agent 7 será usado agora, entre F3 e F4.
 - OQ-05 — Manter `AI_MONTHLY_BUDGET_USD=5` em dev até quando? **Decisão pendente.** Sem urgência.
 - OQ-06 — ~~Operador vai criar Figma e configurar Figma MCP?~~ **Resolvido**: Agent 6 entregou F3 com Figma Make + brief textual, sem Figma MCP. Eventual divergência visual fina é débito conhecido (F3_DONE §11).
 - OQ-07 — **Quando o ESLint/Next plugin warning vai virar tarefa formal?** Está em todos os reviews desde F0. Sugestão: criar uma "house-cleaning task" não-fásica.

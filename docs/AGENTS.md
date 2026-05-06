@@ -152,20 +152,22 @@
 
 ---
 
-## Agent 7 — Frontend QA / Playwright — **proposto**
+## Agent 7 — Frontend QA / Playwright
 
-> Brief operacional ainda não criado. Será gerado sob aprovação.
-
-- **Responsabilidade:** smoke E2E local do painel após F3 fechar (e em handovers futuros).
-- **Allowed scope (proposta inicial):**
-  - Playwright local (já há MCP configurado em `mcp.json`).
-  - Specs cobrindo: auth, ranking, filtradas, detalhe, ações, custos.
-  - Ambiente: `npm run dev` + Supabase dev.
-- **Forbidden scope (proposta inicial):**
+- **Brief:** [`docs/agents/AGENT_7_QA.md`](agents/AGENT_7_QA.md).
+- **Responsabilidade:** QA estruturado pós-F3 (sanidade técnica + E2E + evidência do KPI operacional de 30 ideias em <= 30 min).
+- **Allowed scope:**
+  - Playwright local (dev only).
+  - `typecheck` / `lint` / `build` / `dev`.
+  - Validação de rotas/fluxos e geração de evidência em `docs/handback/F3_QA_DONE.md`.
+  - Correções pequenas de QA somente com aprovação do operador.
+- **Forbidden scope:**
   - Playwright em produção.
   - Scraping externo via Playwright.
-  - Mudar produto.
-- **Status atual:** PENDING (brief a ser produzido sob aprovação).
+  - Mudar produto/escopo da fase.
+  - Commit/push/PR sem aprovação explícita.
+- **Expected handback:** [`docs/handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md).
+- **Status atual:** DONE (`approved_with_minors`), com revisão em [`docs/handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md).
 
 ---
 
@@ -179,4 +181,4 @@
 | Agent 4 | F1 aprovado | `F2_DONE.md` | acionar Agent 5 |
 | Agent 5 | qualquer `F<N>_DONE.md` | `F<N>_REVIEW.md` | operador segue |
 | Agent 6 | F2 aprovado + brief F3 aprovado | `F3_DONE.md` | acionar Agent 5 |
-| Agent 7 (proposto) | F3 aprovado | `F3_QA_DONE.md` | acionar Agent 5 |
+| Agent 7 | F3 aprovado | `F3_QA_DONE.md` | acionar Agent 5 |
