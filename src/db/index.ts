@@ -5,8 +5,12 @@ import dotenv from "dotenv";
 
 type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 
-let _client: ReturnType<typeof postgres> | null = null;
-let _db: DrizzleClient | null = null;
+type DbGlobal = {
+  _gomvpClient?: ReturnType<typeof postgres>;
+  _gomvpDb?: DrizzleClient;
+};
+
+const dbGlobal = globalThis as unknown as DbGlobal;
 
 /**
  * Lazy database accessor. The Postgres connection is opened only on first
@@ -15,7 +19,7 @@ let _db: DrizzleClient | null = null;
  * `DATABASE_URL`.
  */
 export function getDb(): DrizzleClient {
-  if (_db) return _db;
+  if (dbGlobal._gomvpDb) return dbGlobal._gomvpDb;
 
   // In local dev, force-load `.env` so stale shell-level DATABASE_URL values
   // don't break the app with auth errors against the wrong database.
@@ -29,9 +33,11 @@ export function getDb(): DrizzleClient {
   }
   // `prepare: false` is the safe default for both direct (port 5432) and
   // transaction-pooled (port 6543) Supabase connections.
-  _client = postgres(url, { prepare: false, max: 10 });
-  _db = drizzle(_client, { schema, casing: "snake_case" });
-  return _db;
+  const client = postgres(url, { prepare: false, max: 1 });
+  const db = drizzle(client, { schema, casing: "snake_case" });
+  dbGlobal._gomvpClient = client;
+  dbGlobal._gomvpDb = db;
+  return db;
 }
 
 export type DbClient = DrizzleClient;

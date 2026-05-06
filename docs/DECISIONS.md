@@ -113,6 +113,77 @@
 - **Status:** Em vigor.
 - **Decisão:** Reportes em PT-BR; nomes de código/entidade/arquivo em EN; checklists e tabelas curtas; nada de prosa longa em handbacks.
 
+### O-05 — Figma como source of truth visual da F3
+- **Status:** Em vigor desde 2026-05-06.
+- **Contexto:** F3 entrega painel SaaS interno completo com 15 frames cobrindo as 14 telas do PRD §18 + Configurações.
+- **Decisão:** Adotar **Figma** (autorado pelo operador, possivelmente via Figma Make) como referência visual única para o Agent 6.
+  - Brief de design canônico: [`docs/design/FIGMA_DESIGN_BRIEF.md`](design/FIGMA_DESIGN_BRIEF.md).
+  - Agent 6 lê o Figma via **Figma MCP**, mapeia frames para rotas Next.js e implementa em Tailwind + shadcn/ui.
+  - Conflito Figma vs brief textual: **Figma vence** com registro do desvio no handback.
+  - Conflito Figma vs PRD: **PRD vence**.
+- **Implicação:**
+  - `mcp.json` precisa receber `figma` antes do Agent 6 ser ativado.
+  - Tokens (cores, tipografia, radii, sombras) só viram código via `globals.css` / `tailwind.config.ts`. Sem nova arquitetura.
+  - Sem Figma, Agent 6 fica bloqueado.
+
+### O-06 — Navegação agrupada da sidebar
+- **Status:** Em vigor desde 2026-05-06.
+- **Contexto:** As 14 telas do PRD §18 + Configurações precisam de uma sidebar legível e agrupada.
+- **Decisão:** Sidebar com 4 grupos fixos:
+  1. **Operação:** Dashboard, Ranking, Filtradas, Brief MVP.
+  2. **Pipeline:** Sinais, Clusters, Execuções (Runs).
+  3. **Configuração:** Fontes, Pesos, Blacklist, Prompts.
+  4. **Sistema:** Custos, Configurações.
+- **Implicação:**
+  - Agente futuro não pode reordenar grupos sem aprovação escrita do operador.
+  - Configuração ativa em `src/components/dashboard/nav-config.ts`.
+
+### O-07 — Porta fixa do dev server (3000, sem fallback)
+- **Status:** Em vigor desde 2026-05-06 (encerramento da F3).
+- **Contexto:** Durante a F3, ciclos de restart e múltiplas instâncias geraram inconsistência de chunks Next e dificultaram o debug.
+- **Decisão:**
+  - `npm run dev` roda em porta **fixa 3000** (`next dev -p 3000`).
+  - `npm run start` idem (`next start -p 3000`).
+  - Se a porta estiver ocupada, o Next deve **falhar explicitamente**, sem fallback automático para 3001/3002.
+  - `predev` script limpa `.next` antes de subir o dev server, eliminando cache stale.
+- **Implicação:**
+  - Evita rotas de dev convivendo em portas diferentes.
+  - Operador precisa matar processos antigos antes de subir um novo dev. Esse é o comportamento desejado.
+  - Vale para todos os agentes futuros.
+
+### O-08 — Singleton de cliente Postgres em `globalThis`
+- **Status:** Em vigor desde 2026-05-06.
+- **Contexto:** Sob hot reload do dev, novas conexões Postgres se acumulavam até atingir `EMAXCONNSESSION` na conta Supabase.
+- **Decisão:** `src/db/index.ts` mantém o cliente em `globalThis._gomvpClient` / `_gomvpDb`, com `prepare:false` e `max:1`. Acesso via `getDb()` lazy.
+- **Implicação:**
+  - Em produção (sem hot reload) o efeito é idêntico ao anterior (uma única conexão por instância serverless).
+  - Em dev, evita explosão de conexões.
+  - Não altera produção. Não altera schema. Não é exposto a coletores (continuam usando `getDb()`).
+  - Eventual evolução para `max>1` exigirá decisão dedicada.
+
+### O-09 — `/coleta` mantida como rota legada (fora da nav)
+- **Status:** Em vigor desde 2026-05-06.
+- **Contexto:** A tela `(dashboard)/coleta` foi entregue na F1 como leitor read-only de `raw_items`. Em F3 a sidebar foi reorganizada conforme O-06 e `Sinais` virou a leitura principal do pipeline.
+- **Decisão:**
+  - `/coleta` permanece **funcional** e acessível por URL direta.
+  - **Não** aparece na sidebar.
+  - Não é absorvida visualmente em `Sinais` em F3 — pode ser revisitado em fase posterior.
+- **Implicação:**
+  - Histórico operacional preservado.
+  - Sem trabalho extra de migração visual nesta fase.
+
+### O-10 — Reversão de filtrada via `feedback.action='unfilter_override'`
+- **Status:** Em vigor desde 2026-05-06.
+- **Contexto:** `ideas.is_filtered_out` é coluna **gerada** a partir de `blacklist_tags`. Reverter sem alterar `blacklist_tags` (e sem migration) exige overlay de UI.
+- **Decisão:**
+  - Reversão de uma ideia filtrada é registrada em `feedback` com `action='unfilter_override'` e `note` obrigatória (3..2000 chars).
+  - O Ranking principal (`/ranking`) considera `is_filtered_out=false` **OR** existência de `feedback.unfilter_override` para a ideia.
+  - `blacklist_tags` continua intacto. A ideia permanece também visível em `/filtradas` com marca de override.
+- **Implicação:**
+  - Sem migration. Sem alteração de pipeline.
+  - É override de **exibição**, não de classificação. Quem audita filtradas vê o histórico real.
+  - Caso futuro queira reclassificação real, abrir nova decisão (provavelmente migration em F5 ou F4).
+
 ---
 
 ## Como abrir nova decisão

@@ -3,7 +3,7 @@
 Radar automático de oportunidades B2C da Built2Go.
 Coleta sinais de fontes públicas (HN, Product Hunt, RSS, Apple RSS, Stack Exchange), aplica blacklist obrigatória, extrai dores com IA, agrupa por similaridade vetorial, gera até 30 ideias rankeadas 2x/semana e permite ao operador único aprovar/rejeitar/marcar como promissora. Apenas ideias aprovadas geram brief de MVP.
 
-> **Status atual:** F2 concluída (`approved_with_minors`). F3 (Painel + Ações) ainda não iniciada. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
+> **Status atual:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). Painel SaaS interno disponível em `(dashboard)/` com 15 rotas. F4 ainda não iniciada. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
 
 ## Stack
 
@@ -61,7 +61,8 @@ Simula `current_spend_usd` em 78%, 82%, 92% e 100% e valida o comportamento de `
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000). Use uma conta criada no Supabase Auth (Authentication → Users → Add user → email+password).
+O servidor local é **fixo** em [http://localhost:3000](http://localhost:3000) (porta 3000 obrigatória, sem fallback automático).
+Use uma conta criada no Supabase Auth (Authentication → Users → Add user → email+password).
 
 ## Scripts
 

@@ -1,7 +1,7 @@
 # GoMVP V1 — Implementation Plan
 
 > **Versão:** 1.0
-> **Status:** F0/F1/F2 concluídas (`approved_with_minors` em todas). F3 ainda não iniciada. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
+> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). F4 ainda não iniciada. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
 > **Fonte canônica:** [`docs/PRD.md`](PRD.md). Este documento operacionaliza §24 (plano incremental), Apêndice B (tarefas técnicas), Apêndice C (gates) e Apêndice E (princípios operacionais) em formato executável por agente. **Não introduz escopo novo.** Em qualquer divergência, o PRD prevalece.
 
 ---
@@ -13,7 +13,7 @@
 | F0 Fundação | Agent 2 | [`docs/agents/AGENT_2_F0_FUNDACAO.md`](agents/AGENT_2_F0_FUNDACAO.md) | `docs/handback/F0_DONE.md` | Agent 5 |
 | F1 Coleta HN | Agent 3 | [`docs/agents/AGENT_3_F1_COLETA_HN.md`](agents/AGENT_3_F1_COLETA_HN.md) | `docs/handback/F1_DONE.md` | Agent 5 |
 | F2 IA + Ideias | Agent 4 | [`docs/agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | `docs/handback/F2_DONE.md` | Agent 5 |
-| F3 Painel + Ações | Agent 6 (proposto) | a definir (sob aprovação) | `docs/handback/F3_DONE.md` | Agent 5 |
+| F3 Painel + Ações | Agent 6 | [`docs/agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md) | [`docs/handback/F3_DONE.md`](handback/F3_DONE.md) | Agent 5 |
 | F4 Feedback + Brief | a definir | a definir | `docs/handback/F4_DONE.md` | Agent 5 |
 | F5 Hardening | a definir | a definir | `docs/handback/F5_DONE.md` | Agent 5 |
 
@@ -198,7 +198,7 @@ Toda variável nova entra em `.env.example` no PR/handback que a introduz. Serve
 
 ## F3 — Painel + Ações
 
-**Owner:** Agent 6 (proposto, brief operacional pendente de aprovação). **Tempo estimado:** 3–4 dias.
+**Owner:** Agent 6 ([`docs/agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)). **Status:** DONE (`approved_with_minors`). Handback em [`docs/handback/F3_DONE.md`](handback/F3_DONE.md), review em [`docs/handback/F3_REVIEW.md`](handback/F3_REVIEW.md). **Tempo realizado:** dentro da estimativa.
 
 ### Entregáveis
 

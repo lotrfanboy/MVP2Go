@@ -128,40 +128,27 @@
 
 ---
 
-## Agent 6 — F3 UI/UX (Painel + Ações) — **proposto**
+## Agent 6 — F3 UI/UX (Painel + Ações)
 
-> Brief operacional ainda não criado. Será gerado pelo Agent 0 sob aprovação.
-
+- **Brief:** [`docs/agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md).
 - **Responsabilidade:** Fase F3 — Painel + Ações em PT-BR conforme PRD §18.
-- **Allowed scope (proposta inicial, sujeita à aprovação do operador):**
-  - Telas de leitura/ações:
-    - Login (já existe; revisar).
-    - Dashboard (métricas, atalhos, alertas).
-    - Ranking principal (top 30 com filtros: status, fonte, score mínimo, idioma, tipo).
-    - Aba **Filtradas** (auditoria, motivo de blacklist, reversão manual com nota).
-    - Detalhe da ideia (com evidência clicável).
-    - Brief MVP (somente após aprovação; gera/regera/copia — geração pode ficar gated por flag até F4 entrar).
-    - Sinais (explorer).
-    - Clusters (lista + sinais).
-    - Runs (histórico + custo + erro).
-    - Custos (gasto vs. budget + últimas 50 `ai_usage_logs`).
-    - Sources (CRUD).
-    - Weights (edição + botão "recalcular scores").
-    - Blacklist (CRUD).
-    - Prompts (read-only).
-  - Ações no detalhe da ideia: aprovar, rejeitar, promissora, snooze (default 30d), nota.
-  - Componentes shadcn/ui necessários para essas telas.
-  - Server Actions / Route Handlers de leitura e ações de operador.
-- **Forbidden scope (proposta inicial):**
-  - Mudar schema fora de migrations adicionais aprovadas (ex.: tabelas auxiliares de UI seriam exceção e só com SQL preview).
+- **Allowed scope:**
+  - Shell de aplicação: sidebar agrupada, topbar, budget pill, breadcrumb.
+  - 15 rotas no grupo `(dashboard)/`: Dashboard, Ranking, Detalhe da Ideia, Filtradas, Sinais, Clusters, Runs, Custos, Fontes, Pesos, Blacklist, Prompts, Brief MVP, Configurações, **Coleta** (legada).
+  - Server Actions com Zod para CRUD em `sources`, `weights`, `blacklist_terms` e ações em `feedback` (snooze, override de filtrada, etc.).
+  - Recálculo de score determinístico via `runScoreIdeas()`.
+  - `loading.tsx` / `error.tsx` no grupo `(dashboard)`.
+  - Endurecimento do dev loop: porta fixa 3000, singleton de DB, `predev` limpando `.next`.
+- **Forbidden scope:**
+  - Mudar schema. Criar migration.
   - Adicionar coletor.
   - Implementar feedback humano completo (vai para F4).
-  - Treinar/alterar embeddings ou prompts.
-  - Mudar pipeline IA.
-  - Commit/push/PR.
-- **Input docs (recomendado):** PRD §6/§18/§19/§24, Implementation Plan F3, F2 done/review, Decisions, Cursor Rules.
-- **Expected handback:** `docs/handback/F3_DONE.md`.
-- **Status atual:** PENDING (brief a ser produzido pelo Agent 0 sob aprovação).
+  - Treinar/alterar embeddings ou prompts versionados.
+  - Mudar pipeline IA, scoring, budget, cron.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD §6/§18/§19/§24, Implementation Plan F3, F2 done/review, Decisions, Cursor Rules, [`docs/design/FIGMA_DESIGN_BRIEF.md`](design/FIGMA_DESIGN_BRIEF.md).
+- **Expected handback:** [`docs/handback/F3_DONE.md`](handback/F3_DONE.md).
+- **Status atual:** DONE (`approved_with_minors`). Review em [`docs/handback/F3_REVIEW.md`](handback/F3_REVIEW.md).
 
 ---
 
@@ -191,5 +178,5 @@
 | Agent 3 | F0 aprovado | `F1_DONE.md` | acionar Agent 5 |
 | Agent 4 | F1 aprovado | `F2_DONE.md` | acionar Agent 5 |
 | Agent 5 | qualquer `F<N>_DONE.md` | `F<N>_REVIEW.md` | operador segue |
-| Agent 6 (proposto) | F2 aprovado + brief F3 aprovado | `F3_DONE.md` | acionar Agent 5 |
+| Agent 6 | F2 aprovado + brief F3 aprovado | `F3_DONE.md` | acionar Agent 5 |
 | Agent 7 (proposto) | F3 aprovado | `F3_QA_DONE.md` | acionar Agent 5 |
