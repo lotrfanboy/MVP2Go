@@ -19,19 +19,23 @@
 ## Agent 0 — Orchestrator / Project Lead
 
 - **Brief:** [`docs/agents/AGENT_0_PL.MD`](agents/AGENT_0_PL.MD).
-- **Responsabilidade:** auditar repo, manter docs de controle sincronizadas, preparar prompts dos próximos agentes, prevenir scope creep.
+- **Responsabilidade:** auditar repo, manter docs de controle sincronizadas, preparar prompts dos próximos agentes, prevenir scope creep, **redesenhar arquitetura quando o operador autorizar mudança estratégica**.
 - **Allowed scope:**
   - Ler tudo.
-  - Criar/atualizar **somente** docs em `docs/PROJECT_STATE.md`, `docs/DECISIONS.md`, `docs/AGENTS.md`, `docs/HANDOFF_TEMPLATE.md`, `docs/NEXT_STEPS.md` e `docs/agents/*.md`.
+  - Criar/atualizar docs em `docs/PROJECT_STATE.md`, `docs/DECISIONS.md`, `docs/AGENTS.md`, `docs/HANDOFF_TEMPLATE.md`, `docs/NEXT_STEPS.md`, `docs/agents/*.md`, `docs/handback/AGENT_0_*.md`.
+  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-17).
+  - **Editar `docs/PRD.md`** apenas sob autorização explícita do operador para mudança estratégica registrada como D-XX (autorização concedida em 2026-05-06 para rodada 7 do PRD).
+  - **Editar `docs/IMPLEMENTATION_PLAN.md`** quando refletir decisão registrada em DECISIONS.
+  - **Editar `.cursor/rules/gomvp-product-rules.mdc`** apenas sob autorização explícita do operador para refletir princípios novos (autorização concedida em 2026-05-06).
 - **Forbidden scope:**
   - Implementar features.
   - Editar schema, migrations, pipeline, coletores, AI logic, scoring, cron.
   - Tocar `.env*` ou secrets.
   - Chamar OpenAI.
-  - Commit/push/PR.
-- **Input docs:** PRD, Implementation Plan, Decisions, Project State, Cursor Rules, handbacks anteriores.
+  - Commit/push/PR sem autorização explícita.
+- **Input docs:** PRD, Implementation Plan, Decisions, Project State, Cursor Rules, handbacks anteriores, briefs de outros agentes.
 - **Expected handback:** Atualização das docs de controle + recomendação de próxima ação + prompt copy-paste do próximo agente.
-- **Quando usar:** no início do projeto, após cada handback de fase, e sempre que houver dúvida de coordenação.
+- **Quando usar:** no início do projeto, após cada handback de fase, em mudança estratégica, e sempre que houver dúvida de coordenação.
 
 ---
 
@@ -167,7 +171,80 @@
   - Mudar produto/escopo da fase.
   - Commit/push/PR sem aprovação explícita.
 - **Expected handback:** [`docs/handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md).
-- **Status atual:** DONE (`approved_with_minors`), com revisão em [`docs/handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md).
+- **Status atual:** DONE (`approved_with_minors`), com revisão em [`docs/handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md). Pode ser reativado em F4A para QA estruturado das telas `/funil/*` se operador autorizar.
+
+---
+
+## Agent 8 — F4A Opportunity Motor (Evidence Layer + Scoring + Gates)
+
+- **Brief:** [`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md).
+- **Responsabilidade:** Fase F4A — Motor source-agnostic (`src/motor/*`), camada `evidences`, adapter `signals → evidences`, scoring multi-axis, state machine de gates, UI Funil mínima (8 rotas).
+- **Allowed scope:**
+  - Migration `0004_*.sql`: novas tabelas + alteração nullable em `ideas`.
+  - Pasta nova `src/sources/{hn,manual,watch}/`.
+  - Pasta nova `src/motor/`.
+  - Prompts `001`: P-EVI-001, P-TRD-001, P-OPP-001 (arquivos novos, não tocam legado).
+  - Endpoints `/api/cron/build-evidence`, `/api/cron/score-opportunities`, `/api/manual/analyze`.
+  - Pesos `f4_*` em `weights`.
+  - 8 rotas `/funil/*` (radar, watch-topics, manual, trends, need-clusters, opportunities, opportunities/[id], source-confidence).
+  - Atualização de `nav-config.ts` (novo grupo "Funil" + badges `LEGADO`).
+- **Forbidden scope:**
+  - Adicionar fonte nova (Trends/PH/Reddit/etc).
+  - Alterar `signals`, `clusters`, `signal_cluster`, `briefs`, `feedback` legados.
+  - Alterar pipeline F2 (`extract`, `embed`, `cluster`, `ideaGen`, `score`).
+  - Alterar prompts `001` legados.
+  - Desligar `runIdeaGeneration` ou rotas legadas F3.
+  - Migrar dados legados retroativamente para `evidences` (opção fica para operador decidir; default = não).
+  - Tocar `.env*`, secrets, MCP.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), [`architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md), Implementation Plan (F4A), Decisions D-01..D-17, Cursor Rules, handbacks F2/F3.
+- **Expected handback:** `docs/handback/F4A_DONE.md`.
+- **Status atual:** READY TO START (aguardando aprovação do operador).
+
+---
+
+## Agent 9 — F4B Cross-source com Google Trends
+
+- **Brief:** [`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
+- **Responsabilidade:** Fase F4B — Google Trends como segunda fonte mínima do motor; valida cross-source confidence.
+- **Allowed scope:**
+  - Pasta nova `src/sources/gtrends/` (`README.md` ToS-first, `collector.ts`, `normalizer.ts`).
+  - Endpoint `/api/cron/collect-trends`.
+  - Atualização leve em `src/motor/opportunity-score.ts` para incorporar `search_momentum`.
+  - Atualização UI em `/funil/trends` e `/funil/source-confidence`.
+- **Forbidden scope:**
+  - Alterar schema do motor.
+  - Alterar tabelas legadas.
+  - Adicionar fonte além de Trends.
+  - Desligar pipeline F2 ou adapter F4A.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), brief Agent 8, handback F4A.
+- **Expected handback:** `docs/handback/F4B_DONE.md`.
+- **Status atual:** PENDING (entra após F4A aprovado).
+
+---
+
+## Agent 10 — F4C Feedback estruturado + Idea/Brief gates
+
+- **Brief:** [`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md).
+- **Responsabilidade:** Fase F4C — `feedback` polimórfico com `reason_code` obrigatório; gates `idea_allowed` e `brief_allowed`; prompts P-IDE-002 e P-BRF-002.
+- **Allowed scope:**
+  - Migration `0006_*.sql`: alteração polimórfica em `feedback` (target_kind/target_id/reason_code/gate_after) + backfill seguro.
+  - Prompts `001`: P-IDE-002, P-BRF-002 (arquivos novos).
+  - `src/motor/idea-from-opportunity.ts`, `src/motor/brief-from-idea.ts`.
+  - Endpoints `/api/funil/ideas/generate`, `/api/funil/brief/generate`.
+  - Novas rotas `/funil/ideas`, `/funil/ideas/[id]`, `/funil/briefs`, `/funil/feedback-history`.
+  - Few-shot dinâmico em P-OPP-001 e P-IDE-002.
+- **Forbidden scope:**
+  - Alterar prompts `001` legados.
+  - Desligar `runIdeaGeneration` legado nem `/brief/[ideaId]` legado.
+  - Alterar schema do motor além do escopo (`feedback` polimórfico).
+  - Adicionar fonte nova.
+  - Destruir feedback existente.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9, handbacks F4A/F4B.
+- **Expected handback:** `docs/handback/F4C_DONE.md`. **F4 fecha após este handback aprovado.**
+- **Status atual:** PENDING (entra após F4B aprovado).
 
 ---
 
@@ -182,3 +259,6 @@
 | Agent 5 | qualquer `F<N>_DONE.md` | `F<N>_REVIEW.md` | operador segue |
 | Agent 6 | F2 aprovado + brief F3 aprovado | `F3_DONE.md` | acionar Agent 5 |
 | Agent 7 | F3 aprovado | `F3_QA_DONE.md` | acionar Agent 5 |
+| **Agent 8** | F3 QA aprovado + brief F4A aprovado pelo operador | `F4A_DONE.md` | acionar Agent 5 |
+| **Agent 9** | F4A aprovado | `F4B_DONE.md` | acionar Agent 5 |
+| **Agent 10** | F4B aprovado | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |

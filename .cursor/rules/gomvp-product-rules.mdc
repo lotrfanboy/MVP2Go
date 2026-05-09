@@ -10,57 +10,115 @@ alwaysApply: true
 
 # GoMVP / Built2Go Rules
 
-You are working on GoMVP, an internal web-first tool from Built2Go.
+You are working on **GoMVP**, an internal web-first tool from Built2Go.
 
-GoMVP is an automation-first radar for capturing market signals and generating B2C microproduct ideas with evidence.
+GoMVP is an **automation-first opportunity motor for B2C microproducts**. It captures public signals (discussion, search momentum, supply, content demand, complaints, workarounds, alternative requests, repeated pain) from sources with official API/RSS, transforms each signal into a typed source-agnostic **`Evidence`**, aggregates evidences into **`opportunity_cards`** with multi-axis scoring (Trend / Pain / Audience / Source Confidence / Launchability / Opportunity), and only allows generating an **idea** after the operator approves the opportunity, and only allows generating a **brief** after the operator approves the idea.
 
-The goal is NOT to validate markets automatically. AI scores are only prioritization signals. Real validation requires clicks, signups, usage, return behavior, payment or sharing.
+The unit of value is **`opportunity`**, not `idea`.
+
+> *"You make money solving other people's pain. GoMVP must find pain/need before suggesting product."*
+
+The goal is **NOT** to validate markets automatically. AI scores are only prioritization signals. Real validation requires clicks, signups, usage, return behavior, payment or sharing — outside GoMVP. The system **must be able to say "no opportunity here"** (`gate_state='trend_only'` is a valid answer).
+
+Canonical product source: [`docs/PRD.md`](mdc:docs/PRD.md) (rodada 7).
+Canonical architecture: [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](mdc:docs/architecture/F4_OPPORTUNITY_MOTOR.md).
+Canonical roadmap of sources: [`docs/architecture/F5_SOURCE_EXPANSION.md`](mdc:docs/architecture/F5_SOURCE_EXPANSION.md).
+Canonical decisions: [`docs/DECISIONS.md`](mdc:docs/DECISIONS.md).
 
 ## Product principles
 
 - Build simple, fast, low-support B2C microproduct infrastructure.
-- Prioritize utility apps, AI tools, calculators, generators, checkers, organizers and narrow tools.
+- **Find pain/need before product** (D-11). Trend without pain ≠ opportunity.
+- Prioritize utility apps, AI tools, calculators, generators, checkers, organizers and narrow tools (D-10).
 - Avoid marketplaces, social networks, native mobile apps, heavy support, enterprise workflows, high customization and complex integrations before validation.
 - One person must be able to operate the product.
 - The product must be web-first.
 - Favor operational simplicity over technical sophistication.
+- **Source-agnostic motor** (DP-15): `src/motor/*` never imports anything specific to a source. It works only over `evidences`.
+- **`signals` and `evidences` are distinct layers** (DP-16): never rename one into the other; never substitute. `signals` (F2 legacy) stays intact and becomes **one** of the sources of evidence via adapter `signals → evidences`.
+- **Manual seeds and watch topics never raise external Source Confidence** (DP-17, D-14). They are seeds, not market proof.
+- **Pain weighs more than trend** in `opportunity_score`.
+- **Idea only from `approved_opportunity`. Brief only from `idea_allowed`** (DP-18, D-15).
+- Reason code is **mandatory** in any gate transition on opportunities/ideas (DP-20).
 - Do not overengineer.
 
-## GoMVP V1 scope
-
-The V1 must be automation-first.
+## V2 scope (current — F4A in queue)
 
 Core flow:
-1. Collect signals from configured sources.
-2. Normalize raw items.
-3. Deduplicate items.
-4. Filter spam, weak signals and irrelevant news.
-5. Use AI to extract pains, desires, complaints and opportunity signals.
-6. Cluster similar signals.
-7. Generate candidate B2C microproduct ideas.
-8. Score each idea.
-9. Show daily/weekly ranking with up to 30 ideas.
-10. Let the human operator approve, reject or mark ideas as promising.
-11. Generate MVP brief only for approved ideas.
-12. Use feedback to improve ranking through rules, weights and examples, without training a custom model in V1.
 
-## V1 preferred sources
+1. Collect from configured sources (cron 2x/week + manual on-demand by authenticated operator).
+2. Normalize raw items into `raw_items` (legacy F1) and/or directly into `evidences` (new sources from F4B+).
+3. Pipeline F2 (legacy) continues running on HN, producing `signals` → adapter `signals → evidences`.
+4. Motor builds `trend_candidates` and `need_clusters` over `evidences`.
+5. Motor produces `opportunity_cards` with axes scores and a state machine of gates.
+6. Operator reviews opportunities in `/funil/*` (with mandatory reason codes for transitions).
+7. Generate `idea_candidate` only from `approved_opportunity` (P-IDE-002).
+8. Generate `brief` only from `idea_allowed` (P-BRF-002).
+9. Feedback (polymorphic by `target_kind`) flows back into ranking via rules, weights, few-shot dynamic and preference embeddings (cap ±0.05). **No model training in V1.**
 
-Prioritize viable, cheap, stable and low-risk sources:
-- Product Hunt API
-- Hacker News API / Algolia HN
-- RSS feeds
-- Apple RSS rankings
-- Stack Exchange API
-- Manual signal entry as auxiliary input only
+## Source priorities
 
-Do not depend on:
-- heavy scraping
-- Reddit as a core V1 source
-- YouTube comments at scale
-- Google Trends as mandatory dependency
-- Google Play/App Store review scraping
-- private or logged-in sources
+**In production:** Hacker News (Algolia HN Search API).
+**Next gate (F4B):** Google Trends — second minimal source for cross-source confidence.
+**F5 roadmap (D-17):** Product Hunt > Reddit > YouTube > Reviews. One source at a time, under approval, following the `src/sources/<source>/{README, collector, normalizer}` pattern.
+**Backup (no priority):** RSS feeds, Apple RSS, Stack Exchange — only on concrete demand.
+
+Forbidden permanently:
+- Reddit/YouTube/X via scraping. Only official APIs.
+- Google Play / App Store reviews via scraping.
+- Sources requiring private login.
+- Manual entry counted as external source for Source Confidence.
+
+## Required opportunity output
+
+Each `opportunity_card` must include:
+- topic_label, pain_summary, audience_summary
+- 6 axes scores: trend_score, pain_score, audience_score, source_confidence, launchability_score, opportunity_score
+- gate_state (one of: trend_only / watch / weak_signal / pain_candidate / opportunity_candidate / qualified_opportunity / approved_opportunity / rejected / snoozed)
+- evidence_count, source_count
+- linked evidences via `opportunity_evidences` (auditable trace)
+- reason_codes when applicable
+
+## Required idea output (legacy P-IDE-001 + new P-IDE-002)
+
+Each idea must include:
+- provisional name
+- detected pain (linked to opportunity in V2)
+- likely audience
+- evidence/signals
+- source URLs
+- clear promise
+- product type
+- possible MVP
+- acquisition channel
+- monetization
+- expected support level
+- legal/LGPD risk
+- build difficulty
+- distribution potential
+- total score (legacy) / opportunity_id reference (new)
+- score justification
+- recommended next step
+
+## Approved idea MVP brief (legacy P-BRF-001 + new P-BRF-002)
+
+For approved ideas (`gate_state='idea_allowed'` in V2 / `status='approved'` in legacy), generate:
+- MVP objective
+- hypothesis
+- target audience
+- promise
+- minimum screens
+- minimum features
+- suggested stack
+- landing copy
+- CTA
+- test channels
+- metrics
+- kill / iterate / scale criteria
+- technical risks
+- API costs
+- limitations
+- LGPD notes
 
 ## MCP usage rules
 
@@ -88,74 +146,37 @@ Forbidden MCP behavior:
 - Never store unnecessary personal data.
 - Never use unknown or untrusted MCP servers.
 - Prefer read-only access whenever possible.
-
-## Required idea output
-
-Each idea must include:
-- provisional name
-- detected pain
-- likely audience
-- evidence/signals
-- source URLs
-- clear promise
-- product type
-- possible MVP
-- acquisition channel
-- monetization
-- expected support level
-- legal/LGPD risk
-- build difficulty
-- distribution potential
-- total score
-- score justification
-- recommended next step
-
-## Approved idea MVP brief
-
-For approved ideas, generate:
-- MVP objective
-- hypothesis
-- target audience
-- promise
-- minimum screens
-- minimum features
-- suggested stack
-- landing copy
-- CTA
-- test channels
-- metrics
-- kill / iterate / scale criteria
-- technical risks
-- API costs
-- limitations
-- LGPD notes
+- **MCP is never a runtime dependency of GoMVP** (DP-04).
 
 ## Development rules
 
 Before writing production code:
-- First produce PRD.
-- Then produce technical architecture.
-- Then produce database schema.
-- Then produce implementation plan.
-- Then wait for approval before coding.
+- First read PRD (rodada 7), then `architecture/F4_OPPORTUNITY_MOTOR.md` (or relevant), then `IMPLEMENTATION_PLAN.md`, then current agent brief.
+- Before editing files, report scope + files to change + commands to run + risks; ask approval.
 
 Never start coding directly unless explicitly requested.
 
 When coding:
-- Use TypeScript.
+- Use TypeScript strict.
 - Prefer Next.js for web app.
 - Prefer Postgres with pgvector for embeddings/similarity.
 - Keep the architecture modular but simple.
-- Avoid premature abstractions.
-- Log all collector runs and AI operations.
-- Keep prompts versioned.
-- Keep scoring weights configurable.
+- Avoid premature abstractions (only `AIProvider` and `src/motor/*` source-agnostic core are required abstractions).
+- Log all collector runs and AI operations (`runs`, `ai_usage_logs`).
+- Keep prompts versioned. To change a prompt in production, create a new version (002, 003, ...). Never edit a version already used.
+- Keep scoring weights configurable in `weights`. Legacy weights kept; new F4 weights use `f4_*` prefix.
 - Make costs visible where AI/API usage exists.
-- Use structured JSON outputs for AI calls.
+- Use structured JSON outputs for AI calls (Zod-validated).
 - Validate and sanitize external data.
-- Store original source URL for traceability.
+- Store original `source_url` and `source_ref` for traceability.
 - Avoid storing unnecessary personal data.
-- Respect LGPD principles: purpose limitation, minimization, necessity and transparency.
+- Respect LGPD principles: purpose limitation, minimization, necessity, transparency. Retention 30/90/180/365d (D-09). Manual_inputs/watch_topics follow same window as signals (90d).
+- **AI monthly budget** (D-16, replaces D-08 as the operational framing): effective cap is **always** read from **ENV + `cost_budgets.monthly_budget_usd`** — do **not** hardcode a dollar amount in source as an immutable product rule. During **F4/F5 motor validation**, the documented **typical operational target** is **US$ 5/month**; prod and dev may use different configured values. Thresholds 0.80/0.90/1.00 apply to the **current** budget row.
+- Every AI call goes through `assertBudget()` and writes to `ai_usage_logs` with `prompt_version`.
+- Vercel Cron is the only automatic orchestrator. Manual analysis (`/api/manual/analyze`) is operator-triggered only.
+- **Never rename or substitute `signals` for `evidences`** (DP-16).
+- **Never desligar pipeline F2 legacy** (`runIdeaGeneration`, P-IDE-001, P-BRF-001) without explicit operator decision.
+- **Never let manual/watch raise external Source Confidence** (DP-17).
 
 ## Decision rule
 
@@ -166,5 +187,4 @@ When there is a tradeoff, choose:
 4. lower support burden
 5. simpler codebase
 
-
-Do not optimize for scale before proving the pipeline generates useful ideas.
+Do not optimize for scale before proving the pipeline generates useful **opportunities** (not just ideas).

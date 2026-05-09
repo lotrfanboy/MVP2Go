@@ -104,7 +104,7 @@ src/
 - Cada nova migration **deve ser revisada em SQL antes de ser aplicada**.
 - Toda chamada de IA (em F2+) passa por `assertBudget()` e grava em `ai_usage_logs`.
 - `prompt_version` é salvo em cada chamada (tabela `prompts` nasce em F2).
-- Hard cap de US$ 50/mês via `cost_budgets`. Thresholds fixos: 0.80 (warning) / 0.90 (auto-stop em cron) / 1.00 (hard-stop).
+- Teto de IA: **`cost_budgets` + ENV** (ex.: `AI_MONTHLY_BUDGET_USD`). Na validação F4/F5 o alvo operacional típico documentado é US$ 5/mês (D-16) — valor efetivo sempre configurável, não hardcoded no código. Thresholds fixos sobre o budget vigente: 0.80 (warning) / 0.90 (auto-stop em cron) / 1.00 (hard-stop).
 - Sem commit, push ou PR sem aprovação humana explícita.
 
 ## Documentação

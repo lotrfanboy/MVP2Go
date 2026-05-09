@@ -39,9 +39,9 @@ User-facing UI must be in Brazilian Portuguese.
 
 Code, file names and component names may be in English.
 
-## F3 Screens
+## F3 Screens (legacy — keep functional)
 
-Implement/validate:
+Implement/validate while the legacy pipeline remains in use:
 
 1. Dashboard
 2. Ranking / Top ideias
@@ -58,6 +58,25 @@ Implement/validate:
 13. Brief MVP
 14. Configurações / estados gerais
 
+Mark these in navigation as **LEGADO** when the Funil group exists (per PRD / project state).
+
+## F4 Funil screens (opportunity motor)
+
+When implementing F4 UI, cover routes under `/funil/*` as specified in the agent brief and PRD §18, including at minimum for F4A:
+
+1. `/funil/radar`
+2. `/funil/watch-topics`
+3. `/funil/manual`
+4. `/funil/trends`
+5. `/funil/need-clusters`
+6. `/funil/opportunities`
+7. `/funil/opportunities/[id]`
+8. `/funil/source-confidence`
+
+F4C adds (when in scope): `/funil/ideas`, `/funil/ideas/[id]`, `/funil/briefs`, `/funil/feedback-history`.
+
+**F4A / HN-only UX rule:** any `opportunity_card` with `gate_state='qualified_opportunity'` while the deployment is **HN-only** (single external source / capped `source_confidence`) must show a visible **Baixa confiança de fonte** (or **Low confidence**) badge or state — HN-only validates **motor structure**, not broad market proof.
+
 ## Components
 
 Prefer reusable components:
@@ -72,6 +91,7 @@ Prefer reusable components:
 - status badge
 - score badge
 - risk badge
+- **source-confidence / low-confidence badge** (F4+)
 - empty state
 - loading skeleton
 - error state
@@ -97,12 +117,17 @@ The UI must reinforce:
 
 - AI score is prioritization, not real validation.
 - Real validation requires click, signup, usage, return, payment or sharing.
-- Risky/blacklisted ideas belong in “Filtradas”.
-- GoMVP is for one operator reviewing ideas quickly.
+- Risky/blacklisted ideas belong in “Filtradas” (legacy funnel).
+- GoMVP is for one operator reviewing ideas and **opportunities** quickly.
+- **Opportunity ≠ MVP. Brief ≠ validation.**
+- Manual input and watch topics are **seeds**; they do not prove external market (no fake Source Confidence).
+- **Pain weighs more than trend** in opportunity scoring (when showing multi-axis scores).
+- The system may answer **“sem oportunidade suficiente”** (e.g. `trend_only`).
 
 ## Forbidden
 
 Do not:
+
 - change schema;
 - create migrations;
 - change backend business logic;
@@ -134,7 +159,7 @@ For every screen:
 After implementation, request Playwright QA or run Playwright MCP if allowed.
 
 Validate:
-- all routes load;
+- all routes in scope load;
 - sidebar works;
 - desktop/tablet/mobile works;
 - no 404;

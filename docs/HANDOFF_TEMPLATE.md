@@ -94,7 +94,7 @@ Se nenhuma, escrever `Nenhuma`.
 
 - Período: `YYYY-MM-DD`..`YYYY-MM-DD`.
 - Mês corrente: `YYYY-MM`.
-- Budget mensal vigente: `US$ X.XX` (informar override de dev se houver — ver [`docs/DECISIONS.md`](DECISIONS.md) O-01).
+- Budget mensal vigente: `US$ X.XX` (fonte: `cost_budgets` + ENV; na validação F4/F5 alvo típico US$ 5 — D-16).
 - Gasto acumulado no mês (`cost_budgets.current_spend_usd`): `US$ X.XX`.
 - Gasto incremental desta fase: `US$ X.XX`.
 - Operações usadas (de `ai_usage_logs.operation`): contagem por `extract`, `embedding`, `cluster_summary`, `idea_gen`, `filter_ai`, `brief`.

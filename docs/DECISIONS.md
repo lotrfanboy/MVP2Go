@@ -51,20 +51,66 @@
 - **Decisão:** Drizzle ORM + drizzle-kit (migrations explícitas).
 - **Implicação:** Migrations geradas via `drizzle-kit generate` e exibidas em SQL antes de aplicar.
 
-### D-08 — Cap de custo IA
-- **Status:** Fechada.
-- **Decisão:** Hard cap US$ 50/mês. Thresholds 0.80 (warning) / 0.90 (auto-stop em cron) / 1.00 (hard-stop).
-- **Implicação:** Toda chamada IA passa por `assertBudget()` e grava em `ai_usage_logs`.
+### D-08 — Cap de custo IA (substituída por D-16 em 2026-05-06)
+- **Status:** ~~Fechada (rodada 4 do PRD).~~ **Substituída por D-16** na rodada 7.
+- **Decisão original:** Hard cap US$ 50/mês.
+- **Por que mudou:** operador decidiu reduzir cap para **US$ 5/mês** dado o uso real e a opção por baixa intensidade. Ver D-16.
+- **Implicação:** thresholds 0.80/0.90/1.00 mantidos sobre o novo cap. `assertBudget()` continua intocado.
 
 ### D-09 — Retenção LGPD
 - **Status:** Fechada.
 - **Decisão:** 30d `raw_items`, 90d `signals`, 180d `ideas`/`briefs`, 365d `ai_usage_logs`.
-- **Implicação:** Job de retenção e endpoint de purge entregues em F5.
+- **Implicação:** Job de retenção e endpoint de purge entregues em **F6** (hardening).
 
 ### D-10 — Categorias B2C
-- **Status:** Fechada.
+- **Status:** Fechada. Mantida intacta na rodada 7.
 - **Decisão:** B2C amplo com **blacklist obrigatória** (16 categorias) e priorização (`utility`, `ai_tool`, `calculator`, `generator`, `checker`, `organizer`).
-- **Implicação:** Itens com `blacklist_tags` saem do ranking principal e ficam na aba **Filtradas** (auditoria). `category_bonus = 0.05` sobre score.
+- **Implicação:** Itens com `blacklist_tags` saem do ranking principal e ficam na aba **Filtradas** (auditoria). `category_bonus = 0.05` sobre score legado. Em F4A, categoria bloqueada **zera `launchability_score`** automaticamente.
+
+### D-11 — Mudança de visão: idea → opportunity
+- **Status:** Fechada (rodada 7, 2026-05-06).
+- **Contexto:** GoMVP era radar de ideias. Operador identificou que a unidade certa é **oportunidade** (dor + público + cross-source confidence + launchability).
+- **Decisão:** A unidade central do produto passa a ser `opportunity`. `idea` só pode ser gerada a partir de `opportunity_card.gate_state='approved_opportunity'` (regra de domínio). `brief` só pode ser gerado a partir de `idea.gate_state='idea_allowed'`.
+- **Implicação:** PRD §1, §6, §9, §22 reescritos. Fluxo legado (F2 `runIdeaGeneration`) **continua existindo** para dataset histórico, sem desligar em F4A.
+
+### D-12 — Evidence layer source-agnostic
+- **Status:** Fechada (rodada 7, 2026-05-06).
+- **Contexto:** Pipeline atual é HN-acoplado (extract.ts lê payload HN direto). Para suportar Trends/PH/Reddit/YouTube/Reviews sem reescrever o motor, é necessário um vocabulário comum de evidência tipada.
+- **Decisão:** Criar nova tabela `evidences` source-agnostic. **`signals` permanece intacto** e vira **uma das fontes** de evidência via adapter `signals → evidences` em F4A. **Não renomear, não substituir.**
+- **Implicação:** F4A introduz `src/sources/<source>/{collector,normalizer}` e `src/motor/*` source-agnostic. O motor nunca lê `signals`, sempre `evidences`. Detalhes em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md).
+
+### D-13 — Scoring multi-axis
+- **Status:** Fechada (rodada 7, 2026-05-06).
+- **Contexto:** `total_score` único colapsa dor, tendência, público e launchability em um número, escondendo trade-offs.
+- **Decisão:** Em `opportunity_cards`, scores ficam separados em 6 axes: `trend_score`, `pain_score`, `audience_score`, `source_confidence`, `launchability_score`, `opportunity_score` (composto). Pesos default por axis com prefixo `f4_*` em `weights`. **Pain pesa mais que trend** no composto.
+- **Implicação:** UI Funil mostra os 6 axes por opportunity. Pesos legados intactos para `ideas` legacy. Detalhes em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §7.
+
+### D-14 — Cross-source obrigatório como gate de qualidade
+- **Status:** Fechada (rodada 7, 2026-05-06).
+- **Contexto:** HN-only valida arquitetura do motor mas **não** valida mercado amplo. Source Confidence inflada vira certeza falsa.
+- **Decisão:** F4A é validação **estrutural** (HN-only): por construção, `source_confidence ≤ 0.40` em 100% das opportunities. F4B (Google Trends) é parte mínima da F4 para começar a validar cross-source. F4 só fecha após F4A + F4B + F4C.
+- **Implicação:** Manual e watch **não** elevam `source_confidence` externa. Cap automático aplicado em `opportunity-score`.
+
+### D-15 — Gates explícitos + reason codes
+- **Status:** Fechada (rodada 7, 2026-05-06).
+- **Decisão:** State machine em `opportunity_cards.gate_state` com 9 estados nomeados (`trend_only | watch | weak_signal | pain_candidate | opportunity_candidate | qualified_opportunity | approved_opportunity | rejected | snoozed`). Toda transição registra em `feedback`. Aprovação e rejeição exigem `reason_code` (vocabulário fechado de 19 valores em [`F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §10.2).
+- **Implicação:** F4C migra `feedback` para polimórfico (`target_kind`, `target_id`, `reason_code`, `gate_after`) com backfill seguro. UI obriga `reason_code` em toda transição.
+
+### D-16 — Cap operacional de IA na validação F4/F5 (substitui D-08 como alvo vigente)
+- **Status:** Fechada (rodada 7, 2026-05-06). **Ajustada** em 2026-05-09 (operador).
+- **Contexto:** Uso real até F3 ficou baixo. Para **validação interna do motor de oportunidades (F4/F5)**, o operador quer um teto operacional conservador — **sem tratar esse valor como regra eterna hardcoded do produto**.
+- **Decisão:** Durante a validação do motor (F4/F5), o **alvo operacional** do cap mensal de IA é **US$ 5/mês**. O valor efetivo **sempre** vem de **configuração**: variável de ambiente (ex.: `AI_MONTHLY_BUDGET_USD`) e/ou coluna `cost_budgets.monthly_budget_usd` — **nunca literal** fixo em código. Thresholds **0.80 / 0.90 / 1.00** permanecem fixos sobre o budget vigente.
+- **Implicação:**
+  - Seed e docs podem usar US$ 5,00 como **default** na fase atual; o operador pode subir ou descer pelo **ENV** ou editando a linha do mês em `cost_budgets`.
+  - Estimativas F4A/B/C em PRD §14 usam US$ 5 como cenário de referência, não como limite imutável.
+  - F6+ ou pós-validação: revisar cap e defaults sem reabrir D-11..D-15.
+  - Antes de subir fontes pesadas em F5C/F5D, reavaliar custo agregado e ajustar `cost_budgets`/ENV.
+
+### D-17 — Nova ordem de fontes em F5
+- **Status:** Fechada (rodada 7, 2026-05-06).
+- **Contexto:** PRD V1 §8 listava PH/HN/RSS/Apple/Stack Exchange. Visão V2 prioriza fontes com maior densidade de dor explícita e cross-source confidence.
+- **Decisão:** Ordem F5: **PH > Reddit > YouTube > Reviews**. RSS/Apple/Stack Exchange ficam como **backup** sem prioridade, implementados só sob demanda concreta. Ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md).
+- **Implicação:** PRD §8 atualizado. Cada fonte F5x entra como sprint dedicado sob aprovação caso a caso (mantém DP-08 spirit).
 
 ---
 
@@ -73,7 +119,7 @@
 > Tratar como decisões duras. Violar exige aprovação escrita do operador.
 
 - **DP-01** Estrutura **flat** em `src/...`. Sem monorepo, sem `apps/web/`.
-- **DP-02** Migrations sempre exibidas em SQL antes de aplicar. `db:migrate` só com aprovação.
+- **DP-02** Migrations sempre exibidas em SQL antes de aplicar. **Não há autorização genérica** para aplicar migration: cada SQL precisa de **aprovação explícita e específica** do operador antes de `db:migrate` ou equivalente.
 - **DP-03** Sem commit, push ou PR sem aprovação explícita.
 - **DP-04** MCP nunca é dependência runtime. Toda integração de produção é via SDK/fetch.
 - **DP-05** Toda chamada IA passa por `assertBudget()` e grava `ai_usage_logs` com `prompt_version`.
@@ -82,21 +128,25 @@
 - **DP-08** F2 começa **HN-only**. Demais coletores entram um por vez sob aprovação.
 - **DP-09** Blacklist sempre ativa após F1. Ranking principal só mostra itens sem `blacklist_tags`.
 - **DP-10** Vercel Cron é o único orquestrador da V1.
-- **DP-11** Hard cap US$ 50/mês com thresholds fixos 0.80/0.90/1.00.
-- **DP-12** Sem dado pessoal sensível persistido. Retenção segue D-09.
+- **DP-11** Cap mensal de IA **configurável** via ENV + `cost_budgets`; na validação F4/F5 o **alvo operacional** é **US$ 5/mês** (D-16). Thresholds fixos 0.80/0.90/1.00 sobre o budget vigente **não** são configuráveis em V1.
+- **DP-12** Sem dado pessoal sensível persistido. Retenção segue D-09. `manual_inputs` e `watch_topics` seguem mesma janela que `signals` (90d).
 - **DP-13** `category_bonus` e `preference_affinity` cap em ±0.05 cada. Nunca dominam o score.
 - **DP-14** Pacote npm novo exige justificativa explícita.
+- **DP-15** **Motor source-agnostic** (`src/motor/*`): nunca importa nada específico de fonte. Trabalha apenas sobre `evidences` (D-12).
+- **DP-16** **`signals` e `evidences` são camadas distintas.** Nunca renomear, nunca substituir. `signals` permanece intacto; `evidences` é nova camada source-agnostic (D-12).
+- **DP-17** **Manual e watch nunca elevam Source Confidence externa** (D-14). São sementes, não prova de mercado.
+- **DP-18** **Idea só de `approved_opportunity`. Brief só de `idea_allowed`** (D-11/D-15). Aplicado em rotas novas (`/api/funil/*`); legado mantido sem desligar.
+- **DP-19** **Sistema deve poder dizer "não há oportunidade aqui"** (`gate_state='trend_only'` é resposta válida, não falha).
+- **DP-20** **Reason code obrigatório** em transições de `gate_state` em opportunities/ideas (D-15).
 
 ---
 
 ## Decisões operacionais (não-produto)
 
-### O-01 — Override de budget em ambiente dev
-- **Status:** Em vigor desde F2.
-- **Contexto:** Para validar guard de orçamento sem inflar o cap mensal de produção, `AI_MONTHLY_BUDGET_USD=5` em dev.
-- **Decisão:** Manter US$ 5 em dev como teto temporário. **Produção continua US$ 50.**
-- **Implicação:** Thresholds 0.80/0.90/1.00 funcionam idênticos em ambos os ambientes.
-- **Revisão pendente:** voltar para US$ 50 em dev assim que parar a fase de calibração de F2/F3.
+### O-01 — Budget por ambiente (DEV vs PROD)
+- **Status:** Atualizada em 2026-05-09.
+- **Contexto histórico:** Em F2/F3 havia prática de US$ 5 em dev e US$ 50 em PRD legado.
+- **Resolução (com D-16 ajustada):** O valor do cap é **100% configurável** por ENV (`AI_MONTHLY_BUDGET_USD` ou nome vigente no código) e por `cost_budgets.monthly_budget_usd`. Dev e produção **podem** divergir se o operador configurar assim — não é regra do produto impor um único número eterno. Para a fase de validação F4/F5, o **default documentado** é US$ 5/mês.
 
 ### O-02 — Ausência de git local (na auditoria de Agent 0)
 - **Status:** Aberta.

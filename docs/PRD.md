@@ -1,15 +1,23 @@
 # GoMVP V1 — PRD
 
-> **Versão:** 1.0
-> **Status:** decisões D-01 a D-10 fechadas; pronto para F0 sob aprovação.
+> **Versão:** 1.1 (rodada 7).
+> **Status:** decisões D-01 a D-16 fechadas. F0/F1/F2/F3 entregues e revisadas. Próximo gate: F4A (sob aprovação).
 > **Owner:** Built2Go (operador único).
-> **Última revisão:** rodada 6 (ajustes de blacklist, F1 sem IA, Vercel Cron).
+> **Última revisão:** rodada 7 + ajuste 2026-05-09 (cap IA D-16 = alvo operacional F4/F5 configurável por ENV/banco; sem backfill F4A; badge baixa confiança em qualified HN-only).
 
 ---
 
 ## 1. Visão do produto
 
-GoMVP é o **radar automático de oportunidades B2C** da Built2Go. Transforma posts, perguntas, lançamentos e rankings de fontes públicas com API/RSS em **ideias rastreáveis de microprodutos**, ordenadas por potencial e ligadas à evidência que as gerou. Não valida mercado: prioriza com evidência. Validação real só ocorre com clique, cadastro, uso, retorno, pagamento ou compartilhamento reais — **fora** do escopo do GoMVP.
+GoMVP é o **motor automático de oportunidades B2C** da Built2Go. Capta sinais públicos de discussão, busca, oferta, conteúdo e reclamação a partir de fontes com API/RSS oficial; transforma cada sinal em **evidência tipada** (`Evidence`) source-agnostic; agrega evidências em **oportunidades** com scores multi-axis (Trend / Pain / Audience / Source Confidence / Launchability / Opportunity); e só permite **gerar ideia** depois que a oportunidade for aprovada pelo operador, e só permite **gerar brief de MVP** depois que a ideia for aprovada.
+
+A unidade central do produto é **`opportunity`**, não `idea`.
+
+> *"Você ganha dinheiro resolvendo dor dos outros. O GoMVP precisa encontrar dor/necessidade antes de sugerir produto."*
+
+GoMVP **não valida mercado automaticamente**. Scores de IA são prioridade, não prova. Validação real só ocorre com clique, cadastro, uso, retorno, pagamento ou compartilhamento reais — **fora** do escopo do GoMVP. O produto deve poder dizer: **"não há oportunidade suficiente aqui"**.
+
+A arquitetura técnica detalhada do motor está em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md). Roadmap de fontes em [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md).
 
 ## 2. Problema
 
@@ -20,14 +28,15 @@ GoMVP é o **radar automático de oportunidades B2C** da Built2Go. Transforma po
 
 ## 3. Objetivo
 
-Entregar, com pipeline automático **2x/semana (segunda e quinta)**, um **ranking de até 30 ideias B2C** com evidência clicável, operável por 1 pessoa, com **hard cap de IA em US$ 50/mês**.
+Entregar, com pipeline automático **2x/semana (segunda e quinta)** + **análise manual on-demand**, um **funil de até 30 oportunidades B2C** com evidência clicável e cross-source confidence, operável por 1 pessoa, com **teto operacional de IA** na faixa de **US$ 5/mês durante a validação F4/F5 do motor** (D-16). O valor efetivo do cap mensal é **configurável** via variável de ambiente e `cost_budgets.monthly_budget_usd` — não é constante hardcoded no produto.
 
 KPIs guiadores:
 
-- Top-10 julgado "vale ler" ≥ 70%.
-- ≥ 1 ideia aprovada/semana.
-- Tempo de operação ≤ 30 min/dia.
-- Custo IA real ≤ US$ 50/mês (kill switch obrigatório).
+- Top-10 do funil de oportunidades julgado "vale aprofundar" ≥ 70%.
+- ≥ 1 oportunidade aprovada/semana e ≥ 1 ideia aprovada/mês a partir de oportunidade.
+- Tempo de operação ≤ 30 min/dia (KPI 30: revisar 30 itens em ≤ 30 min).
+- Custo IA real ≤ **o cap vigente** configurado para o mês (na validação F4/F5, alvo típico **US$ 5/mês**), com kill switch obrigatório (thresholds 0.80 / 0.90 / 1.00 sobre o budget vigente).
+- Sistema deve ser capaz de classificar uma tendência como `trend_only` (sem dor) e **não** gerar ideia automaticamente.
 
 ## 4. Público / usuário
 
@@ -39,13 +48,18 @@ Operador único da Built2Go. Não é multi-tenant, não é produto público. **A
 
 ## 6. Escopo da V1
 
-1. Coletores automáticos: Product Hunt API, Algolia HN, RSS configurável, Apple RSS rankings, Stack Exchange API.
-2. Entrada manual opcional via formulário.
-3. Pipeline: normalize → dedupe determinístico → filtro híbrido (regras + IA leve em F2+) → **blacklist obrigatória** → embeddings → extração IA → clusterização (pgvector) → geração de ideias → scoring determinístico.
-4. Painel web em PT-BR com: dashboard, ranking principal (até 30), aba **Filtradas** (auditoria), detalhe da ideia, ações (aprovar/rejeitar/promissora/snooze/nota), runs, custos, fontes (CRUD), pesos, sinais (debug), clusters, prompts (read-only), blacklist (CRUD).
-5. **Brief de MVP sob demanda apenas para ideias aprovadas.**
-6. Loop de feedback **sem treinar modelo**: regras, pesos, exemplos few-shot, embeddings de preferência.
-7. Logs de runs, custos por chamada IA, prompts versionados.
+1. **Coletores automáticos source-agnostic**: Hacker News (em produção desde F1), Google Trends (entra em F4B). Demais fontes (Product Hunt, Reddit, YouTube, Reviews) entram **uma por vez sob aprovação** em F5 conforme `architecture/F5_SOURCE_EXPANSION.md`. RSS configurável, Apple RSS e Stack Exchange ficam como fontes **backup** (sem prioridade), implementadas só sob demanda concreta.
+2. **Entrada manual on-demand** via UI **/funil/manual** (`manual_inputs`) e **rastreamento de temas** via **/funil/watch-topics** (`watch_topics`). Manual e watch **não elevam Source Confidence externa** — servem como semente, não como prova.
+3. **Camada de evidências** (`evidences`) source-agnostic: cada fonte produz `Evidence` tipada (11 tipos: `discussion_signal`, `repeated_pain`, `search_momentum`, `solution_supply`, `content_demand`, `competitor_weakness`, `manual_seed`, `workaround_signal`, `alternative_request`, `pricing_complaint`, `process_manual_work`).
+4. **Motor de oportunidades**: agrupa evidências em `need_clusters` e `trend_candidates`, produz `opportunity_cards` com **scoring multi-axis** (Trend / Pain / Audience / Source Confidence / Launchability / Opportunity) e **state machine de gates** (`trend_only`, `weak_signal`, `pain_candidate`, `opportunity_candidate`, `qualified_opportunity`, `approved_opportunity`, `rejected`, `snoozed`, `watch`).
+5. **Pipeline legado F1/F2** (`raw_items → signals → clusters → ideas`) **continua intacto**: serve como **fonte** de evidências via adapter `signals → evidences` (`evidence_type='discussion_signal'`/`'repeated_pain'`).
+6. **Painel web em PT-BR** com 2 grupos de telas:
+   - **Funil (novo, F4A)**: Radar, Watch Topics, Manual Analysis, Trends, Pain/Need Clusters, Opportunities, Opportunity Detail, Source Confidence / Evidence Trace, Ideas (do funil), Briefs (do funil), Feedback History.
+   - **Operação legada (F3)**: Dashboard, Ranking, Detalhe da Ideia, Filtradas, Sinais, Clusters, Runs, Fontes, Pesos, Blacklist, Prompts, Brief MVP, Custos, Configurações, Coleta. Marcada com badge `LEGADO`.
+7. **Geração de ideia** acontece **apenas a partir de `opportunity_card.gate_state='approved_opportunity'`** (P-IDE-002). Pipeline legado F2 (`runIdeaGeneration` + P-IDE-001) continua existindo para dataset histórico, sem desligar em F4A.
+8. **Brief de MVP** acontece **apenas a partir de `idea.gate_state='idea_allowed'`** (P-BRF-002). Brief legado (P-BRF-001 sob `/brief/[ideaId]`) continua existindo para ideias legadas, sem desligar em F4A.
+9. **Feedback estruturado** (F4C): polimórfico por `target_kind ∈ {evidence, trend, opportunity, idea}` com `reason_code` obrigatório (vocabulário fechado em §20). Loop **sem treinar modelo**: regras, pesos, few-shot dinâmico, embeddings de preferência (cap ±0.05).
+10. **Logs**: `runs` por execução; `ai_usage_logs` por chamada IA com `prompt_version`; prompts versionados em `prompts`.
 
 ### 6.1 Política de categorias B2C
 
@@ -88,87 +102,135 @@ Operador único da Built2Go. Não é multi-tenant, não é produto público. **A
 - Treinamento de modelo / fine-tuning.
 - Validação automática de mercado, publicação de landing real, integrações com analytics/CRM/e-mail externos.
 
-## 8. Fontes de coleta recomendadas
+## 8. Fontes de coleta (ordem de prioridade V2)
 
-Aprovadas V1 (todas via API/RSS oficial, sem scraping):
+Todas via API/RSS oficial, sem scraping. Cada fonte segue o padrão `src/sources/<source>/{collector,normalizer}` e produz `Evidence` tipada (ver `docs/architecture/F4_OPPORTUNITY_MOTOR.md`).
 
-- **Product Hunt API** (GraphQL).
-- **Algolia HN Search API** (Ask HN, Show HN, trending).
-- **RSS feeds configuráveis** (Indie Hackers, BetaList, Dev.to por tag, newsletters públicas).
-- **Apple RSS rankings** (top free/paid/grossing por categoria/país).
-- **Stack Exchange API** (perguntas com muitas views e poucas respostas como sinal forte).
-- **Entrada manual** via formulário (auxiliar).
+**Em produção:**
 
-Fora da V1 (revisar depois): Reddit, YouTube, Google Trends, scraping de reviews, X/Twitter.
+1. **Hacker News** (Algolia HN Search API) — desde F1. Evidence: `discussion_signal`, `repeated_pain`, `workaround_signal`, `alternative_request`.
+
+**Próximo gate (F4B):**
+
+2. **Google Trends** — segunda fonte mínima para validar **cross-source confidence**. Evidence: `search_momentum`. Ver `docs/agents/AGENT_9_F4B_TRENDS.md`. Sem Trends em produção, qualquer opportunity tem `source_confidence ≤ 0.40` (cap automático).
+
+**Roadmap F5 — Source Expansion** (uma por vez sob aprovação, conforme `docs/architecture/F5_SOURCE_EXPANSION.md`):
+
+3. **Product Hunt API** (F5A) — `solution_supply`. Quem está atacando o problema agora.
+4. **Reddit** (F5B) — `repeated_pain`, `workaround_signal`. **Compliance crítico**: API oficial, watch_topics curados, sem coleta de espectro largo.
+5. **YouTube Data API** (F5C) — `content_demand`. Foco em searches/descriptions, não comments em massa.
+6. **Reviews** (F5D) — `competitor_weakness`, `pricing_complaint`. Iniciar com Apple RSS reviews; Trustpilot/G2 sob avaliação.
+
+**Backup (sem prioridade V2):**
+
+- **RSS feeds configuráveis**, **Apple RSS rankings** e **Stack Exchange API** ficam disponíveis no padrão `src/sources/<source>/` mas **só implementados sob demanda concreta** do operador. Tiram-se do "must" do V1 original.
+
+**Fora de escopo permanente:**
+
+- Reddit/YouTube/X/Twitter via scraping. Apenas API oficial.
+- Google Play / App Store reviews via scraping.
+- Fontes que exigem login privado.
+
+**Manual / Watch:** `manual_inputs` e `watch_topics` são **inputs**, não fontes externas. Geram `evidence_type='manual_seed'` e **não contam** em Source Confidence externa.
 
 ## 9. Fluxo funcional completo
 
+Fluxo V2 (opportunity-first). Pipeline legado F1/F2 continua intacto e alimenta o motor via adapter `signals → evidences`.
+
 ```mermaid
 flowchart TD
-    Cron["Vercel Cron seg/qui"] -->|HTTP + CRON_SECRET| Route["api/cron/*"]
-    Route --> Collectors["Collectors PH, HN, RSS, AppleRSS, StackExchange"]
-    Manual["Entrada manual"] --> RawItems["raw_items"]
-    Collectors --> RawItems
-    RawItems --> Normalize["Normalize schema unico"]
-    Normalize --> Dedupe["Dedupe deterministico hash + normalize"]
-    Dedupe --> Filter["Filtro por regras + IA leve em F2+"]
-    Filter --> Blacklist["Blacklist obrigatoria"]
-    Blacklist -->|tag detectada| Filtradas["Aba Filtradas auditoria"]
-    Blacklist -->|sem tag| Embed["Embeddings"]
-    Embed --> Extract["IA extracao pain/desire/oportunidade"]
-    Extract --> Cluster["Cluster cosine 0.78 ajustavel"]
-    Cluster --> Ideas["IA geracao de ideias B2C"]
-    Ideas --> IdeaBlacklist["Blacklist da ideia"]
-    IdeaBlacklist -->|tag detectada| Filtradas
-    IdeaBlacklist -->|sem tag| Score["Scoring deterministico + bonus categoria prioritaria"]
-    Score --> Ranking["Ranking principal ate 30 ideias"]
-    Ranking --> Review["Operador aprova/rejeita/promissora/snooze"]
-    Review --> Feedback["Feedback regras/pesos/exemplos/embeddings"]
-    Feedback -.-> Filter
-    Feedback -.-> Score
-    Review -->|aprovada| Brief["IA brief de MVP"]
-    Budget["assertBudget guard 0.8/0.9/1.0"] -.-> Embed
-    Budget -.-> Extract
-    Budget -.-> Cluster
-    Budget -.-> Ideas
-    Budget -.-> Brief
+    Cron["Vercel Cron seg/qui"] --> CollectHN["/api/cron/collect-hn"]
+    Cron --> CollectTrends["/api/cron/collect-trends (F4B)"]
+    ManualUI["UI: Manual Analysis"] --> ManualInputs["manual_inputs"]
+    WatchUI["UI: Watch Topics"] --> WatchTopics["watch_topics"]
+
+    CollectHN --> RawItems["raw_items"]
+    RawItems --> Pipeline["pipeline F1/F2 (intacto): normalize/dedupe/filter/blacklist/extract/embed/cluster/ideaGen-legado"]
+    Pipeline --> Signals["signals (intacto)"]
+    Signals --> SignalAdapter["signals → evidences adapter (F4A)"]
+
+    CollectTrends --> EvidenceTrends["evidences (search_momentum)"]
+    SignalAdapter --> EvidenceHN["evidences (discussion_signal/repeated_pain/...)"]
+    ManualInputs --> EvidenceManual["evidences (manual_seed)"]
+    WatchTopics -. seed para coletas dirigidas .-> CollectHN
+    WatchTopics -. seed para coletas dirigidas .-> CollectTrends
+
+    EvidenceHN --> Motor["MOTOR src/motor/*"]
+    EvidenceTrends --> Motor
+    EvidenceManual --> Motor
+
+    Motor --> TrendCands["trend_candidates"]
+    Motor --> NeedClusters["need_clusters"]
+    NeedClusters --> Opportunities["opportunity_cards (axes scores + gate)"]
+    TrendCands -. cruza com .-> Opportunities
+
+    Opportunities -->|status=approved_opportunity| IdeaGen["P-IDE-002 (F4C)"]
+    IdeaGen --> NewIdeas["ideas (com opportunity_id)"]
+    NewIdeas -->|status=idea_allowed| BriefGate["Brief gate F4C"]
+    BriefGate --> NewBriefs["briefs (com idea_id)"]
+
+    Feedback["feedback polimórfico (target_kind, reason_code) — F4C"] -.-> Motor
+    Feedback -.-> IdeaGen
+
+    Budget["assertBudget sobre monthly_budget_usd (ENV/cost_budgets)"] -.-> Pipeline
+    Budget -.-> Motor
+    Budget -.-> IdeaGen
+    Budget -.-> BriefGate
 ```
 
 ## 10. Requisitos funcionais
 
+### Coleta e pipeline legado (F1/F2 — intacto)
+
 - RF-01. Coletas executadas em schedule configurável por fonte; default 2x/semana global.
 - RF-02. Cada item preserva `source_url`, `source_id`, `source_name`, `collected_at`, `raw_payload`.
 - RF-03. Normalização para `signals` com `language` (`pt`/`en`/`other`).
-- RF-04. Dedupe **determinístico** por hash de URL canonicalizada + hash de texto normalizado (lowercase, trim, sem stopwords). Cosine semântico só entra em F2+ com embeddings.
-- RF-05. Filtro híbrido: regras determinísticas (palavras-chave, idioma, tamanho mínimo) e, em F2+, classificador IA leve respeitando guard de orçamento.
-- RF-06. **Blacklist obrigatória** aplicada após o filtro: detecta categorias proibidas em `signals` e em `ideas`, grava `blacklist_tags`.
-- RF-07. Extração IA em JSON estruturado: `pain`, `desire`, `complaint`, `behavior`, `audience_hint`, `relevance_b2c`, `signal_strength`, `language`, `evidence_quote`.
-- RF-08. Clusterização por cosine ≥ 0.78, threshold ajustável em `weights`.
-- RF-09. Geração de até 3 ideias por cluster relevante, em JSON, com todos os campos da regra do GoMVP.
-- RF-10. Scoring **determinístico** em código com pesos configuráveis em `weights` + bônus de categoria prioritária (cap +0.05).
-- RF-11. Ranking **principal** lista até 30 ideias por execução com filtros (status, fonte, score mínimo, idioma); ideias com `blacklist_tags` não aparecem aqui.
-- RF-12. Aba **Filtradas** lista ideias com `blacklist_tags`, somente leitura, com motivo da filtragem.
-- RF-13. Ações do operador: aprovar, rejeitar, promissora, snooze (default 30d), nota.
-- RF-14. Brief MVP sob demanda apenas para ideias aprovadas, em JSON estruturado, com regerar/copiar.
-- RF-15. Logs em `runs` (kind, in/out, cost, status, triggered_by) e `ai_usage_logs` por chamada IA.
-- RF-16. Prompts versionados em `prompts`; `prompt_version` salvo em cada chamada.
+- RF-04. Dedupe **determinístico** por hash de URL canonicalizada + hash de texto normalizado.
+- RF-05. Filtro híbrido: regras determinísticas + classificador IA leve (P-FIL-001) respeitando guard de orçamento.
+- RF-06. **Blacklist obrigatória** aplicada após o filtro em `raw_items`, `signals`, `ideas`, e (F4A) em `evidences`.
+- RF-07. Extração IA em JSON estruturado (P-EXT-001): `pain`, `desire`, `complaint`, `behavior`, `audience_hint`, `relevance_b2c`, `signal_strength`, `language`, `evidence_quote`.
+- RF-08. Clusterização legada por cosine ≥ 0.78 (threshold em `weights`).
+- RF-09. Geração legada de até 3 ideias por cluster (P-IDE-001) — **mantida** para dataset histórico, sem desligar em F4A.
+- RF-10. Scoring legado **determinístico** + `category_bonus` (cap +0.05) — mantido para `ideas` legacy.
+- RF-11. Ranking principal legado (`/ranking`) — mantido com badge `LEGADO`.
+- RF-12. Aba **Filtradas** legada — mantida.
+- RF-13. Ações operador em ideias legadas: aprovar, rejeitar, promissora, snooze (`feedback.action='snooze'`), nota.
+- RF-14. Brief MVP legado (`/brief/[ideaId]`) sob demanda para ideias legadas aprovadas — mantido.
+- RF-15. Logs em `runs` e `ai_usage_logs` para todo run e toda chamada IA.
+- RF-16. Prompts versionados em `prompts`; `prompt_version` salvo em cada chamada (DP-06).
 - RF-17. CRUD de `sources`, `weights`, regras de filtro/scoring e `blacklist_terms`.
-- RF-18. Entrada manual de sinal via formulário.
-- RF-19. Métricas: itens coletados, ideias geradas/aprovadas/rejeitadas/filtradas, custo IA do mês, fontes ativas.
+- RF-18. Entrada manual via UI (manual_inputs/watch_topics em F4A; signal manual em F2 mantido).
+- RF-19. Métricas em `/dashboard` e `/funil/radar`.
 - RF-20. Operador rotula exemplos positivos/negativos para realimentar filtro/scoring.
 - RF-21. **Guard de orçamento** `assertBudget()` aplicado **antes de toda chamada IA**.
-- RF-22. Job de retenção LGPD aplica 30/90/180/365d e endpoint de purge por `source_url`.
+- RF-22. Job de retenção LGPD 30/90/180/365d + endpoint de purge por `source_url`.
+
+### Motor de oportunidades (F4A/B/C — novo)
+
+- RF-23. **Evidence layer source-agnostic.** Toda fonte produz `Evidence` tipada com `evidence_type` ∈ vocabulário fechado de 11 valores. Motor nunca lê fonte específica.
+- RF-24. **Adapter `signals → evidences`.** Em F4A, **somente sinais novos** (após go-live do adapter) geram `evidence` correspondente — **sem backfill retroativo** do histórico; backfill futuro é job manual opcional com dry-run e aprovação separada. Cada `signal` elegível produz `evidence(evidence_type='discussion_signal'|'repeated_pain'|...)`. Pipeline legado F1/F2 continua intacto.
+- RF-25. **Trend candidates temporais.** Motor calcula `trend_candidates` em janelas 24h/7d/14d/30d com agregações sobre `evidences.observed_at`.
+- RF-26. **Need clusters.** Agrupamento por cosine sobre `evidences.embedding` filtrado por `pain_text != null` ou `evidence_type ∈ {repeated_pain, workaround_signal, alternative_request, pricing_complaint, process_manual_work, competitor_weakness}`.
+- RF-27. **Opportunity cards.** Toda opportunity tem 6 axes scores: `trend_score`, `pain_score`, `audience_score`, `source_confidence`, `launchability_score`, `opportunity_score`. Cálculos conforme `architecture/F4_OPPORTUNITY_MOTOR.md` §7.
+- RF-28. **Source Confidence cap.** Manual e watch **não** elevam `source_confidence` externa. `distinct_external == 1 ⇒ source_confidence ≤ 0.40`.
+- RF-29. **Gates explícitos.** State machine com estados `trend_only | watch | weak_signal | pain_candidate | opportunity_candidate | qualified_opportunity | approved_opportunity | rejected | snoozed`. Toda transição registra em `feedback`.
+- RF-30. **Idea só nasce de `approved_opportunity`** (P-IDE-002, F4C). Pipeline legado P-IDE-001 continua existindo para histórico.
+- RF-31. **Brief só nasce de `idea_allowed`** (P-BRF-002, F4C). Brief legado P-BRF-001 continua existindo para histórico.
+- RF-32. **Feedback estruturado.** `feedback` polimórfico (`target_kind, target_id`) com `reason_code` obrigatório (vocabulário fechado §20).
+- RF-33. **Manual analysis on-demand.** Endpoint `/api/manual/analyze` autenticado, **fora do cron**, processa input avulso → evidence (`manual_seed`) → opportunity stub.
+- RF-34. **UI Funil** com rotas `/funil/{radar,watch-topics,manual,trends,need-clusters,opportunities,opportunities/[id],source-confidence,ideas,briefs,feedback-history}` (subset entrega em F4A; restante em F4C).
+- RF-35. **Sistema pode dizer "não há oportunidade".** `gate_state='trend_only'` é resposta válida; UI mostra essa categoria como pista de investigação, não como ideia gerada.
 
 ## 11. Requisitos não funcionais
 
-- **Operacional**: 1 pessoa opera; deploy Vercel + Supabase; rollback simples.
-- **Performance**: pipeline processa ≤ 5k itens em ≤ 30 min; listagem do painel < 1s.
-- **Custo**: hard cap US$ 50/mês IA; infra Supabase + Vercel ≤ US$ 50/mês.
+- **Operacional**: 1 pessoa opera; deploy Vercel + Supabase; rollback simples; análise manual on-demand pelo operador autenticado.
+- **Performance**: pipeline processa ≤ 5k itens em ≤ 30 min; listagem do painel < 1s; motor F4 calcula `opportunity_score` em batches.
+- **Custo**: teto de IA definido por **ENV + `cost_budgets`**; na validação F4/F5 o alvo operacional típico é **US$ 5/mês** (D-16). Thresholds 0.80 warning / 0.90 auto-stop em cron / 1.00 hard-stop aplicam-se ao budget **vigente**. Infra Supabase + Vercel ≤ US$ 50/mês.
 - **Observabilidade**: log estruturado por run; custo IA por chamada; alertas em warning de orçamento e em falha de coleta consecutiva.
-- **Segurança**: 1 conta Supabase Auth; secrets em ENV; nenhuma rota pública sem auth; cron protegido por `CRON_SECRET`.
-- **LGPD**: minimização; sem perfis; retenção 30/90/180/365d; purge por URL; política interna documentada.
-- **Idempotência**: cada etapa reprocessa sem duplicar saídas.
-- **Manutenibilidade**: TypeScript estrito, módulos pequenos, sem abstrações prematuras (camada `AIProvider` é a única abstração obrigatória).
+- **Segurança**: 1 conta Supabase Auth; secrets em ENV; nenhuma rota pública sem auth; cron protegido por `CRON_SECRET`; `/api/manual/analyze` só responde a operador autenticado.
+- **LGPD**: minimização; sem perfis; retenção 30/90/180/365d; purge por URL; política interna documentada; manual_inputs e watch_topics seguem mesma retenção que `signals`.
+- **Idempotência**: cada etapa reprocessa sem duplicar saídas; `evidences` tem chave única `(source_key, source_item_id, evidence_type)`.
+- **Manutenibilidade**: TypeScript estrito, módulos pequenos, sem abstrações prematuras (camada `AIProvider` é a única abstração obrigatória; `src/motor/*` source-agnostic é a segunda).
 
 ## 12. Riscos técnicos
 
@@ -191,18 +253,26 @@ flowchart TD
 
 ## 14. Custos de API/IA esperados
 
-Premissa: ~500 itens/coleta × 2 coletas/semana ≈ 4k itens/mês após F2 ativa IA.
+Premissa: ~500 itens/coleta × 2 coletas/semana ≈ 4k itens/mês.
 
-- Coletas: US$ 0 (APIs públicas).
-- **F1**: US$ 0 — sem chamadas de IA. Apenas coleta + dedupe determinístico + filtros por regra.
-- **F2 em diante**:
-  - Embeddings (`text-embedding-3-small`): ~4k × 250 tok ≈ 1M tok/mês → ~US$ 0.02.
-  - Filtro IA leve (apenas dúvidos): ~600 chamadas × 200 tok → desprezível.
-  - Extração (`gpt-4o-mini`): ~2k × 800 tok in + 200 tok out → ~US$ 0.5.
-  - Geração de ideias: ~200 clusters × 1.5k tok in + 800 tok out → ~US$ 0.7.
-  - Brief MVP sob demanda: desprezível.
+- Coletas: US$ 0 (APIs públicas, incluindo Trends em F4B).
+- **F1**: US$ 0 — sem IA.
+- **F2 (legado, em produção)**:
+  - Embeddings: ~US$ 0,02/mês.
+  - Filtro IA leve: desprezível.
+  - Extração (P-EXT-001): ~US$ 0,5/mês.
+  - Geração legada de ideias (P-IDE-001): ~US$ 0,7/mês.
+  - Brief MVP legado sob demanda: desprezível.
+- **F4A (novo motor)**:
+  - P-EVI-001 (extração de evidência sobre signals legados): ~US$ 0,2/mês.
+  - P-OPP-001 (avaliação de opportunity): ~US$ 0,4/mês.
+  - P-TRD-001 (resumo de trend): ~US$ 0,1/mês.
+- **F4B (Trends)**: API gratuita; embeddings adicionais ≤ US$ 0,02/mês.
+- **F4C**:
+  - P-IDE-002 sob demanda: ~US$ 0,2/mês.
+  - P-BRF-002 sob demanda: ~US$ 0,1/mês.
 
-**Estimado: US$ 1.5–4/mês.** Hard cap em US$ 50/mês cobre 10x esse volume com folga.
+**Estimado total V2:** US$ 2,5–3/mês (ordem de grandeza). Com **alvo operacional US$ 5/mês** na validação F4/F5 (D-16, configurável), há folga ~2×. Se cross-source explodir embeddings em F5, reavaliar `cost_budgets`/ENV antes de subir nova fonte.
 
 ## 15. Arquitetura sugerida
 
@@ -274,9 +344,17 @@ Stack final:
 
 Sem `apps/`, sem workspaces, sem turborepo. Adição de pacotes só quando estritamente necessário.
 
-## 17. Modelo de dados final
+## 17. Modelo de dados
 
-> **Quando cada tabela nasce:** F0 cria `runs`, `ai_usage_logs`, `cost_budgets`. F1 cria `sources`, `raw_items`, `blacklist_terms`. **A tabela `signals` só nasce em F2**, junto com a extração IA — em F1 ainda não há `signals` oficial; o que existe são `raw_items` com flags de filtro e blacklist (candidatos).
+> **Quando cada tabela nasce:**
+> - F0: `runs`, `ai_usage_logs`, `cost_budgets`.
+> - F1: `sources`, `raw_items`, `blacklist_terms`.
+> - F2: `signals`, `clusters`, `signal_cluster`, `ideas`, `idea_signals`, `briefs`, `prompts`, `weights`, `feedback` (flat).
+> - **F4A (novo):** `watch_topics`, `manual_inputs`, `evidences`, `evidence_clusters`, `trend_candidates`, `need_clusters`, `opportunity_cards`, `opportunity_evidences`. `ideas` ganha `opportunity_id` e `gate_state` (nullable, sem destruir legado). `blacklist_terms.scope` aceita valor `'evidence'`.
+> - **F4A (adapter `signals → evidences`):** processa **apenas sinais novos** após go-live do adapter — **sem backfill retroativo** do histórico. Backfill opcional = job manual futuro com dry-run e aprovação separada.
+> - **F4C**: `feedback` vira polimórfica (`target_kind`, `target_id`, `reason_code`, `gate_after`) com backfill seguro do legado.
+>
+> Schema completo do motor F4 está em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §5. Esta seção mostra o snapshot **legado V1** e cita as adições.
 
 ```sql
 -- pgvector habilitado em F2
@@ -362,22 +440,50 @@ blacklist_terms(
 
 ## 18. Telas necessárias (PT-BR)
 
-1. **Login** — Supabase Auth.
-2. **Dashboard** — métricas, estado de orçamento, alertas, atalhos.
-3. **Ranking** — top 30 do principal, filtros (status, fonte, score mínimo, idioma, tipo).
-4. **Filtradas** — auditoria das ideias com `blacklist_tags`, motivo, botão de reversão manual com nota.
-5. **Detalhe da ideia** — campos completos + evidência clicável + ações.
-6. **Brief MVP** — visível só após aprovação; gerar/regerar/copiar.
-7. **Sinais** — explorer.
-8. **Clusters** — ver clusters e seus sinais.
-9. **Runs** — histórico, custo, erro.
-10. **Custos** — gasto vs. budget, breakdown por operação/fonte, últimas 50 `ai_usage_logs`.
-11. **Sources** — CRUD.
-12. **Weights** — edição de pesos com botão "recalcular scores".
-13. **Blacklist** — CRUD de `blacklist_terms` com seed inicial.
-14. **Prompts** — read-only (edição via repo).
+### Grupo Funil (novo, F4A/B/C)
+
+1. **/funil/radar** — overview: counts por `gate_state`, top opportunities, alertas.
+2. **/funil/watch-topics** — CRUD de `watch_topics`.
+3. **/funil/manual** — input manual on-demand + lista dos últimos 20.
+4. **/funil/trends** — listagem `trend_candidates`.
+5. **/funil/need-clusters** — listagem `need_clusters`.
+6. **/funil/opportunities** — ranking de `opportunity_cards` com filtros por `gate_state` + axes mínimos.
+7. **/funil/opportunities/[id]** — detalhe + axes + evidence trace + ações de gate (reason_code obrigatório em transições do operador a partir de F4C). **F4A (HN-only):** qualquer `qualified_opportunity` deve exibir estado/badge **Baixa confiança de fonte** (motor valida estrutura, não mercado amplo).
+8. **/funil/source-confidence** — auditoria fonte por opportunity.
+9. **/funil/ideas** — F4C: ideias derivadas de opportunities (`ideas.opportunity_id IS NOT NULL`).
+10. **/funil/briefs** — F4C: briefs derivados de `idea_allowed`.
+11. **/funil/feedback-history** — F4C: auditoria de feedback por `target_kind` + `reason_code`.
+
+### Grupo Operação legada (F3, mantido com badge `LEGADO`)
+
+12. **Login** — Supabase Auth.
+13. **/dashboard** — métricas legadas + estado de orçamento + alertas.
+14. **/ranking** — top 30 ideias legadas + override de filtrada.
+15. **/filtradas** — auditoria + reversão manual com nota.
+16. **/ideias/[id]** — detalhe + ações legadas.
+17. **/brief/[ideaId]** — brief MVP legado (P-BRF-001).
+18. **/sinais** — explorer.
+19. **/clusters** — ver clusters e seus sinais.
+20. **/runs** — histórico, custo, erro.
+21. **/custos** — gasto vs. budget, breakdown, últimas 50 `ai_usage_logs`.
+22. **/fontes** — CRUD `sources`.
+23. **/pesos** — pesos editáveis (legados + axes do funil) com "recalcular scores".
+24. **/blacklist** — CRUD `blacklist_terms`.
+25. **/prompts** — read-only.
+26. **/configuracoes** — ENV read-only + perfil + sair.
+27. **/coleta** — rota legada F1 (acessível por URL, fora da nav).
+
+UI deve sempre reforçar:
+
+- "Score IA não é validação real."
+- "Opportunity ≠ MVP. Brief ≠ validação."
+- "Validação real exige clique, cadastro, uso, retorno, pagamento ou compartilhamento."
 
 ## 19. Lógica de scoring
+
+### 19.1 Scoring legado (em ideias geradas pelo pipeline F2)
+
+Mantido para `ideas.opportunity_id IS NULL` (legado).
 
 `total_score = clamp(Σ weight_i × subscore_i + category_bonus, 0, 1)`
 
@@ -387,20 +493,56 @@ Subscores fornecidos pela IA em P-IDE-001 (0..1):
 Pesos default em `weights` (somam 1.0):
 `pain_clarity 0.18`, `b2c_fit 0.15`, `evidence_volume 0.12`, `signal_strength 0.10`, `audience_specificity 0.10`, `build_simplicity 0.10`, `distribution_potential 0.08`, `recency 0.07`, `support_low 0.05`, `lgpd_safety 0.05`.
 
-`category_bonus` (default em `weights`, valor `0.05`): aplicado quando `product_type ∈ {utility, ai_tool, calculator, generator, checker, organizer}`. Soma ao total e fica clipado em [0,1].
+`category_bonus = 0.05` para `product_type ∈ {utility, ai_tool, calculator, generator, checker, organizer}`. Score recalculável on-demand sem regerar IA.
 
-Score recalculável on-demand sem regerar IA.
+### 19.2 Scoring multi-axis (F4A em diante, em opportunity_cards)
+
+Substitui o `total_score` único como métrica primária. Detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §7.
+
+Seis axes independentes em `opportunity_cards`:
+
+| Axis | Pergunta | Faixa |
+|---|---|---|
+| `trend_score` | "Isso está se movendo?" | 0..1 |
+| `pain_score` | "Existe dor/necessidade?" | 0..1 |
+| `audience_score` | "Quem sofre com isso?" | 0..1 |
+| `source_confidence` | "Em quantas fontes externas distintas aparece?" | 0..1; cap automático: 1 fonte ≤ 0.40, 2 fontes ≤ 0.65, 3 fontes ≤ 0.80, 4+ ≤ 0.90 |
+| `launchability_score` | "Cabe em microproduto IndieLab?" | 0..1; categoria bloqueada (D-10) zera. |
+| `opportunity_score` | Composto final ponderado | 0..1; pesos default `pain=0.30, source=0.20, launch=0.20, audience=0.15, trend=0.10, risk_penalty=0.20`. |
+
+**Pain pesa mais que trend.** É o ponto da virada estratégica. Manual e watch **não** elevam `source_confidence`.
+
+Pesos novos seedados em `weights` com prefixo `f4_*` para não conflitar com legado.
 
 ## 20. Lógica de feedback humano
 
-Quatro mecanismos compostos, **sem treinar modelo**:
+**Sem treinar modelo** (DP mantida).
 
-1. **Regras** editáveis (filtro/scoring/blacklist) avaliadas antes da IA.
-2. **Pesos** ajustáveis em `weights` com recálculo on-demand.
-3. **Exemplos few-shot**: top N aprovados/rejeitados injetados em P-IDE-001 e P-FIL-001.
-4. **Embeddings de preferência**: centroides de aprovadas/rejeitadas em `feedback`. Subscore `preference_affinity` derivado e somado como bônus/penalidade fora do peso (cap ±0.05) para evitar dominar.
+### 20.1 Mecanismos
 
-Métrica: precisão do top-10 ao longo do tempo.
+1. **Regras** editáveis (filtro/scoring/blacklist).
+2. **Pesos** ajustáveis em `weights` com recálculo on-demand (legado e axes do funil).
+3. **Few-shot dinâmico** em P-IDE-001/P-FIL-001 (legado) e P-OPP-001/P-IDE-002 (novo).
+4. **Embeddings de preferência**: centroides por `topic_key` em `feedback`; subscore `preference_affinity` cap ±0.05.
+
+### 20.2 Feedback estruturado (F4C)
+
+`feedback` polimórfico:
+
+```
+feedback.target_kind ∈ { 'evidence' | 'trend' | 'opportunity' | 'idea' }
+feedback.reason_code ∈ vocabulário fechado (lista abaixo)
+feedback.gate_after  ∈ 'approved' | 'rejected' | 'snoozed' | 'watch' | 'promissora' | ...
+```
+
+**Reason codes (vocabulário fechado, validação Zod):**
+
+`pain_weak | audience_unclear | too_generic | too_enterprise | too_b2b | build_heavy | integration_heavy | support_heavy | regulatory_risk | monetization_weak | channel_weak | evidence_insufficient | source_bias | trend_only_no_pain | good_trend_bad_opportunity | good_pain_bad_idea | saturated_market | not_indielab_fit | interesting_but_not_now`
+
+- Aprovação **e** rejeição exigem `reason_code` (UI obriga).
+- Reason codes **agregam** em `opportunity_cards.reason_codes` para evitar reaprovar topic_key recorrente sem motivo.
+
+Métrica: precisão do top-10 do funil ao longo do tempo + redução de reasons negativos repetidos.
 
 ## 21. Como MCP será usado no desenvolvimento (não em runtime)
 
@@ -411,14 +553,17 @@ Métrica: precisão do top-10 ao longo do tempo.
 
 Nenhum MCP é dependência runtime. Toda integração de produção é via SDK direto ou fetch da API pública.
 
-## 22. Critérios de sucesso (8 semanas após GA interno)
+## 22. Critérios de sucesso (8 semanas após GA interno V2)
 
 - Pipeline roda 2x/semana sem intervenção em ≥ 90% das execuções.
-- ≥ 70% do top-10 julgado "vale ler".
-- ≥ 4 ideias aprovadas/mês.
+- ≥ 70% do top-10 do **funil de oportunidades** julgado "vale aprofundar".
+- ≥ 4 **opportunities aprovadas/mês**.
+- ≥ 2 **ideias aprovadas/mês** a partir de opportunity (F4C).
 - ≥ 1 MVP construído/mês a partir do GoMVP.
-- Custo IA real ≤ US$ 50/mês (hard cap nunca disparado em condição normal).
-- Operação ≤ 30 min/dia.
+- **Custo IA real ≤ cap mensal vigente** (na validação F4/F5, alvo típico US$ 5/mês — D-16; valor efetivo por ENV/`cost_budgets`).
+- Operação ≤ 30 min/dia (KPI 30: revisar 30 itens em ≤ 30 min).
+- Sistema demonstra capacidade de classificar tendência sem dor como `trend_only` em ≥ 80% dos casos onde o operador concordaria com isso.
+- **Source Confidence ≥ 0.65** em ≥ 50% das opportunities qualified (exige cross-source ativo, ou seja, F4B em produção).
 
 ## 23. Critérios kill / iterate / scale
 
@@ -445,12 +590,20 @@ Nenhum MCP é dependência runtime. Toda integração de produção é via SDK d
 
 ```mermaid
 flowchart LR
-    F0["F0 Fundacao"] --> F1["F1 Coleta + Storage 1 fonte SEM IA"]
-    F1 --> F2["F2 IA + Embeddings + Clusters + Ideias"]
-    F2 --> F3["F3 Painel + Acoes"]
-    F3 --> F4["F4 Feedback + Brief"]
-    F4 --> F5["F5 Hardening"]
+    F0["F0 Fundação"] --> F1["F1 Coleta HN sem IA"]
+    F1 --> F2["F2 IA + Clusters + Ideias legadas"]
+    F2 --> F3["F3 Painel + Ações"]
+    F3 --> F4A["F4A Motor + Evidence + Opportunities (HN-only)"]
+    F4A --> F4B["F4B Cross-source com Google Trends"]
+    F4B --> F4C["F4C Feedback estruturado + Idea/Brief gates"]
+    F4C --> F5A["F5A Product Hunt"]
+    F5A --> F5B["F5B Reddit"]
+    F5B --> F5C["F5C YouTube"]
+    F5C --> F5D["F5D Reviews"]
+    F5D --> F6["F6 Hardening (kill switch, alertas, retenção, RUNBOOK)"]
 ```
+
+**Status:** F0/F1/F2/F3 entregues e aprovadas. Próximo gate: F4A.
 
 - **F0 Fundação (1–2 dias)**: repo, Next.js 15, Supabase + pgvector, Drizzle, Auth, `runs`/`ai_usage_logs`/`cost_budgets`, `AIProvider`+`OpenAIProvider`, `assertBudget`, deploy mínimo. **Vercel Cron configurado vazio**.
 - **F1 Coleta + Storage (3–5 dias) — sem IA, sem embeddings, sem custo IA. Entrega visual: "Coleta / Raw Items / Candidatos" (não há `signals` ainda)**:
@@ -477,20 +630,26 @@ flowchart LR
   - Scorer determinístico + `category_bonus`.
   - Testes manuais dos thresholds 0.80/0.90/1.00.
   - **Coletores adicionais** (Product Hunt, RSS, Apple RSS, Stack Exchange, manual) **entram um por vez sob aprovação**, depois que HN estiver estável de ponta-a-ponta. Não implementar todos de uma vez.
-- **F3 Painel + Ações (3–4 dias)**: dashboard, ranking principal, **aba Filtradas**, detalhe, ações, tela de custos, sources, weights, blacklist (CRUD).
-- **F4 Feedback + Brief (3–4 dias)**: `feedback`, regras, few-shot dinâmico, embeddings de preferência, P-BRF-001, tela Brief.
-- **F5 Hardening (2–3 dias)**: kill switch testado, retries, alertas, retenção LGPD + purge, RUNBOOK, backup.
+- **F3 Painel + Ações (3–4 dias)** — DONE.
+- **F4A Motor Base / Evidence Layer (5–7 dias)** — Owner: Agent 8 ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md)). Motor source-agnostic + adapter `signals → evidences` + tabelas novas + scoring multi-axis + state machine + UI Funil mínima. HN-only. Source Confidence ≤ 0.40 por design.
+- **F4B Cross-source com Google Trends (4–6 dias)** — Owner: Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). Trends como segunda fonte mínima. `search_momentum`. Source Confidence pode subir para ≥ 0.65.
+- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 10 ([`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md)). Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
+- **F5A..F5D Source Expansion (incremental)** — ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Ordem: PH > Reddit > YouTube > Reviews. Cada fonte um sprint (~3-8 dias) sob aprovação caso a caso.
+- **F6 Hardening (2–3 dias)** — kill switch E2E, retries, alertas, retenção LGPD + purge, RUNBOOK, backup.
 
-Total estimado: ~3 a 4 semanas, 1 dev full-time.
+Total estimado V2: F4A+B+C ~3-4 semanas; F5 incremental conforme demanda; F6 ao final.
 
 ### Gates por fase
 
-- **F0**: deploy 200, DB conectado, `pgvector` ativo, auth funciona, linha de `cost_budgets` do mês criada, `assertBudget()` testado, Vercel Cron registrado vazio.
-- **F1**: ≥ 100 raw_items por execução HN **ou** ≥ 50 candidatos pós-filtro por execução; dedupe < 5% duplicatas; **custo IA = US$ 0** (zero chamada IA na fase).
-- **F2**: ≥ 20 ideias/execução em JSON válido; threshold de orçamento bloqueia em teste; `ai_usage_logs` populando.
-- **F3**: 30 ideias revisadas em ≤ 30 min; aba Filtradas mostra itens com motivo.
-- **F4**: 2 ciclos de feedback movem precisão do top-10; brief gerado em < 30s para 5 ideias aprovadas.
-- **F5**: hard cap dispara em teste; alerta chega; purge LGPD limpa janela; backup restaura em sandbox.
+- **F0**: deploy 200, DB conectado, `pgvector` ativo, auth funciona, linha de `cost_budgets` do mês criada, `assertBudget()` testado, Vercel Cron registrado vazio. — DONE.
+- **F1**: ≥ 100 raw_items/execução HN **ou** ≥ 50 candidatos/execução; dedupe < 5%; custo IA = US$ 0. — DONE.
+- **F2**: ≥ 20 ideias/execução em JSON válido; threshold orçamento bloqueia em teste; `ai_usage_logs` populando. — DONE.
+- **F3**: 30 ideias revisadas em ≤ 30 min (KPI 30); aba Filtradas mostra motivos. — DONE.
+- **F4A**: smoke documentado com **≥ 10** `evidences` criadas a partir de **sinais novos** apenas (adapter **sem** backfill retroativo); ≥ 1 `opportunity_card` `qualified_opportunity`; **UI:** `qualified_opportunity` em HN-only exibe **Baixa confiança de fonte**; **source_confidence ≤ 0.40** em 100% das opportunities (HN-only); manual analysis E2E ok; F3 legado intacto.
+- **F4B**: ≥ 1 opportunity_card com `source_confidence ≥ 0.65` (HN + GT); demonstração `trend_only` e `pain_candidate` corretos; custo Trends US$ 0.
+- **F4C**: idea só nasce com `opportunity_id NOT NULL` em rota nova; brief só nasce com `idea_allowed`; reason_code obrigatório validado; backfill `feedback` legado sem perda de dados.
+- **F5x** (cada fonte): ≥ 30 evidences/dia por 3 dias seguidos; ≥ 1 opportunity sobe `source_confidence` para próxima faixa; nenhuma alteração no motor.
+- **F6**: kill switch testado no **cap vigente** configurado (na validação F4/F5, cenário típico US$ 5/mês); alerta chega; purge LGPD limpa janela; backup restaura em sandbox.
 
 ## 25. Perguntas em aberto
 
@@ -508,13 +667,20 @@ Restaram apenas pontos menores que não bloqueiam F0:
 - **D-01** Stack: Supabase (Postgres + pgvector + Auth). _Aprovado rodada 2._
 - **D-02** IA: OpenAI somente, modelos via ENV, camada `AIProvider` abstrata. _Aprovado rodada 3._
 - **D-03** Idioma: coleta PT + EN, painel PT-BR. _Aprovado rodada 2._
-- **D-04** Ranking: 2x/semana (seg/qui). _Aprovado rodada 3._
+- **D-04** Cadência cron: 2x/semana (seg/qui) + análise manual on-demand pelo operador. _Aprovado rodada 3, ampliado rodada 7._
 - **D-05** Auth: Supabase Auth, 1 conta. _Tácito por D-01._
 - **D-06** Cron: **Vercel Cron** + Route Handlers `/api/cron/*` + `CRON_SECRET`. pg_cron como alternativa futura. _Aprovado rodada 6._
 - **D-07** ORM: Drizzle. _Aprovado rodada 4._
-- **D-08** Cap: hard US$ 50/mês com `ai_usage_logs` + `cost_budgets` (0.80/0.90/1.00). _Aprovado rodada 4._
+- **D-08** ~~Cap: hard US$ 50/mês.~~ **Substituída por D-16** (rodada 7).
 - **D-09** Retenção: 30d raw, 90d signals, 180d ideas/briefs, 365d ai_usage_logs. _Aprovado rodada 5._
-- **D-10** Categorias: **B2C amplo, com blacklist obrigatória e priorização** de utility/tool/calc/generator/checker/organizer. Itens com `blacklist_tags` saem do ranking principal e ficam em aba Filtradas (auditoria). _Aprovado rodada 6._
+- **D-10** Categorias: B2C amplo, blacklist obrigatória, priorização de utility/tool/calc/generator/checker/organizer. _Aprovado rodada 6, mantida intacta na rodada 7._
+- **D-11** **Mudança de visão (idea → opportunity).** GoMVP é motor de oportunidades. Ideia só nasce de opportunity aprovada. _Aprovado rodada 7._
+- **D-12** **Evidence layer source-agnostic.** Nova tabela `evidences`. `signals` continua intacto e vira **uma das fontes** de evidência via adapter. Sem renomear/substituir `signals`. _Aprovado rodada 7._
+- **D-13** **Scoring multi-axis.** 6 axes em `opportunity_cards` substituem `total_score` único como métrica primária. Pesos novos com prefixo `f4_*`. Pain pesa mais que trend. _Aprovado rodada 7._
+- **D-14** **Cross-source obrigatório como gate de qualidade.** F4A é validação **estrutural** (HN-only, source_confidence ≤ 0.40). F4B (Google Trends) é parte mínima da F4 para validar mercado. _Aprovado rodada 7._
+- **D-15** **Gates explícitos + reason codes.** State machine em `opportunity_cards.gate_state` + `reason_code` obrigatório em feedback (vocabulário fechado). Idea só de `approved_opportunity`, brief só de `idea_allowed`. _Aprovado rodada 7._
+- **D-16** **Cap operacional de IA na validação F4/F5 (substitui D-08 como alvo vigente).** Alvo típico **US$ 5/mês** durante validação do motor; valor efetivo **sempre configurável** via ENV e `cost_budgets.monthly_budget_usd` — não é regra eterna hardcoded. Thresholds 0.80/0.90/1.00 sobre o budget vigente. _Aprovado rodada 7; ajuste operador 2026-05-09._
+- **D-17** **Nova ordem de fontes em F5: PH > Reddit > YouTube > Reviews.** Substitui ordem do PRD V1 §8. RSS/Apple/Stack Exchange ficam como backup sem prioridade. _Aprovado rodada 7._
 
 Nenhuma decisão crítica em aberto.
 
@@ -800,8 +966,16 @@ Devolva apenas o JSON.
 - Nenhum commit, PR ou push sem aprovação explícita.
 - Nenhum MCP é dependência runtime do GoMVP.
 - Toda chamada de IA passa por `assertBudget()` e grava `ai_usage_logs`.
-- Prompts versionados; `prompt_version` salvo em cada chamada.
+- Prompts versionados; `prompt_version` salvo em cada chamada. Para mudar prompt em produção, criar nova versão (`002`, `003`, ...). Nunca editar versão já em produção.
 - F1 **não roda IA paga** e **não cria `signals`**. IA e `signals` começam em F2.
 - F2 começa **HN-only**; demais coletores entram **um por vez**, sob aprovação.
-- Blacklist sempre ativa após F1; ranking principal só mostra itens sem `blacklist_tags`.
-- Vercel Cron é o **único orquestrador** na V1.
+- Blacklist sempre ativa após F1; ranking principal legado só mostra itens sem `blacklist_tags`.
+- Vercel Cron é o **único orquestrador automático** na V1. Análise manual (`/api/manual/analyze`) é **acionada exclusivamente pelo operador autenticado**.
+- **Motor source-agnostic** (`src/motor/*`): nunca importa nada específico de fonte. Apenas trabalha sobre `evidences`.
+- **`signals` e `evidences` são camadas distintas.** Nunca renomear ou substituir um pelo outro. `signals` permanece intacto e vira **uma** das fontes de evidência via adapter.
+- **Manual e watch nunca elevam Source Confidence externa.** São sementes, não prova de mercado.
+- **Pain pesa mais que trend** no `opportunity_score`.
+- **Sistema deve poder dizer "não há oportunidade aqui"** (`gate_state='trend_only'` é resposta válida).
+- **Idea só de `approved_opportunity`. Brief só de `idea_allowed`.**
+- **Pacote npm novo exige justificativa explícita** (DP-14).
+- **Teto de IA** definido por **ENV + `cost_budgets`** (na validação F4/F5, alvo típico US$ 5/mês — D-16); thresholds 0.80/0.90/1.00 fixos sobre o budget **vigente**. Não hardcodear valores de cap no código-fonte.

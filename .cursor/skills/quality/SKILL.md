@@ -31,6 +31,8 @@ Before review, read:
 - docs/AGENTS.md
 - docs/HANDOFF_TEMPLATE.md
 - relevant docs/handback file
+- docs/architecture/F4_OPPORTUNITY_MOTOR.md (F4+)
+- docs/architecture/F5_SOURCE_EXPANSION.md (F5+)
 - .cursor/rules/gomvp-product-rules.mdc
 
 ## Forbidden
@@ -38,8 +40,9 @@ Before review, read:
 Do not edit files unless explicitly approved.
 
 Do not:
+
 - change schema;
-- create migrations;
+- create or apply migrations;
 - alter backend logic;
 - alter collectors;
 - alter AI pipeline;
@@ -64,7 +67,8 @@ Check:
 - missing empty/error/loading states;
 - unsafe env handling;
 - no secrets exposed;
-- migrations were approved if present;
+- **migrations:** SQL was shown and operador gave **explicit per-migration approval** before apply — no silent migrations;
+- **F4A:** no backfill of historical `signals → evidences` unless a separate approved dry-run job;
 - handback is complete.
 
 ## Playwright QA
@@ -73,14 +77,16 @@ When Playwright MCP is available, validate:
 
 - login route;
 - dashboard route;
-- all expected F3 routes;
+- all expected **F3** routes (legacy group);
+- **F4+:** all `/funil/*` routes in scope for the phase;
 - sidebar navigation;
 - no 404 on main routes;
 - no blank screens;
 - no critical console errors;
 - desktop/tablet/mobile behavior;
 - table overflow;
-- buttons/links that are visibly broken.
+- buttons/links that are visibly broken;
+- **F4A:** opportunity list/detail: `qualified_opportunity` with HN-only / low `source_confidence` shows **Low confidence** badge or equivalent state (motor validates structure, not market).
 
 ## Status Labels
 

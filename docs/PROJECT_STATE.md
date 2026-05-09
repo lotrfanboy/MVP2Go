@@ -15,12 +15,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Current phase** | Pós-F3 QA concluído (`approved_with_minors`). Próxima fase prevista: F4 (sob aprovação do operador). |
-| **Last completed phase** | F3 — Painel + Ações |
-| **Active agent** | Agent 0 (Orchestrator) — consolidando pós-QA e preparando entrada da F4 |
+| **Current phase** | F4 redesenhada como F4A/B/C (Opportunity Motor). Documentação aprovada na rodada 7 do PRD. Aguardando autorização do operador para ativar Agent 8 (F4A). |
+| **Last completed phase** | F3 — Painel + Ações (com QA estruturado) |
+| **Active agent** | Agent 0 (Orchestrator) — encerrou redesign F4/F5; entregou rodada 7 do PRD, briefs Agent 8/9/10, arquitetura `F4_OPPORTUNITY_MOTOR.md` e `F5_SOURCE_EXPANSION.md`. |
 | **Last reviewer agent** | Agent 5 — fechou QA estruturado de F3 com `approved_with_minors` |
-| **Current branch** | `main` (`41c6212` + `713d773` + `d2dc898`, push concluído em `origin/main`) |
-| **Last updated** | 2026-05-06 |
+| **Current branch** | `main` (push até `d2dc898`). Rodada 7 ainda **não commitada** (aguarda aprovação do operador). |
+| **Last updated** | 2026-05-06 (rodada 7) |
 
 ## Status por fase
 
@@ -28,10 +28,16 @@
 |---|---|---|---|---|
 | F0 — Fundação | [`agents/AGENT_2_F0_FUNDACAO.md`](agents/AGENT_2_F0_FUNDACAO.md) | [`handback/F0_DONE.md`](handback/F0_DONE.md) | [`handback/F0_REVIEW.md`](handback/F0_REVIEW.md) | DONE (`approved_with_minors`) |
 | F1 — Coleta HN | [`agents/AGENT_3_F1_COLETA_HN.md`](agents/AGENT_3_F1_COLETA_HN.md) | [`handback/F1_DONE.md`](handback/F1_DONE.md) | [`handback/F1_REVIEW.md`](handback/F1_REVIEW.md) | DONE (`approved_with_minors`) |
-| F2 — IA + Ideias | [`agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | [`handback/F2_DONE.md`](handback/F2_DONE.md) | [`handback/F2_REVIEW.md`](handback/F2_REVIEW.md) | DONE (`approved_with_minors`) |
-| F3 — Painel + Ações | Agent 6 — UI/UX ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) + [`handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) + [`handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md) | DONE (`approved_with_minors`) |
-| F4 — Feedback + Brief | a definir | — | — | PENDING |
-| F5 — Hardening | a definir | — | — | PENDING |
+| F2 — IA + Ideias (legado) | [`agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | [`handback/F2_DONE.md`](handback/F2_DONE.md) | [`handback/F2_REVIEW.md`](handback/F2_REVIEW.md) | DONE (`approved_with_minors`) |
+| F3 — Painel + Ações | Agent 6 ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) + [`handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) + [`handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md) | DONE (`approved_with_minors`) |
+| **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) | — | — | **READY TO START** (aguardando aprovação) |
+| **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | — | — | PENDING (após F4A) |
+| **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md) | — | — | PENDING (após F4B) |
+| F5A — Product Hunt | a definir | — | — | PENDING (após F4C) |
+| F5B — Reddit | a definir | — | — | PENDING |
+| F5C — YouTube | a definir | — | — | PENDING |
+| F5D — Reviews | a definir | — | — | PENDING |
+| F6 — Hardening | a definir | — | — | PENDING |
 
 ## Trabalho concluído (resumo verificável)
 
@@ -99,71 +105,95 @@ Evidência cruzada com handbacks e arquivos no repositório:
 
 **Custo IA agregado no encerramento da F3 (mês 2026-05):**
 
-- Budget mensal dev: **US$ 5,00** (override O-01).
+- Budget mensal dev no período F3: **US$ 5,00** (via `cost_budgets` + ENV; alvo típico D-16 na validação F4/F5 do motor — configurável).
 - Gasto atual: **~US$ 0,061** (≈ 1,2% do budget).
 - F3 não introduziu chamada IA nova — recálculo de score é determinístico em código.
 
 ## Trabalho em andamento
 
-Nenhum trabalho de fase em andamento. F3 fechada (`approved_with_minors`). Aguardando decisão do operador sobre próxima fase (F4 vs novo coletor).
+**Redesign F4/F5** entregue pelo Agent 0 nesta rodada (2026-05-06):
+
+- Nova pasta `docs/architecture/` criada com `F4_OPPORTUNITY_MOTOR.md` e `F5_SOURCE_EXPANSION.md`.
+- 3 novos briefs de implementação: `agents/AGENT_8_F4A_MOTOR.md`, `agents/AGENT_9_F4B_TRENDS.md`, `agents/AGENT_10_F4C_FEEDBACK.md`.
+- PRD atualizado para rodada 7 (visão idea→opportunity, fluxo evidence layer, scoring multi-axis, KPI custo IA US$ 5/mês, plano F4A/B/C + F5 source expansion + F6 hardening).
+- DECISIONS atualizado com **D-11..D-17** (mudança de visão, evidence layer, scoring multi-axis, cross-source obrigatório, gates+reasons, cap US$ 5, nova ordem de fontes). **D-08 substituída** por D-16. **O-01 encerrada**.
+- IMPLEMENTATION_PLAN reescrito com fases novas.
+- AGENTS.md atualizado com Agent 8/9/10.
+- Handback do redesign em `handback/AGENT_0_F4_REDESIGN.md`.
+
+**Aguardando do operador:**
+
+1. ~~Validação dos docs entregues nesta rodada (rodada 7).~~ **Direção estratégica aprovada** (2026-05-09); ajustes finais de docs/skills aplicados (D-16 configurável, Q-G/Q-H/F4A gates).
+2. **Aprovação explícita para executar** commit/push (Q-F).
+3. Autorização para ativar Agent 8 em chat dedicado (prompt copy-paste em [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §7).
 
 ## Reviews pendentes
 
-Nenhuma review pendente. O ciclo extra de QA estruturado de F3 também foi revisado pelo Agent 5.
+Nenhuma review de gate de implementação pendente. F3 fechada. Próxima review: F4A (após handback do Agent 8).
 
 ## Blockers conhecidos
 
 - **B-01** — ~~Repositório local não é um git workspace.~~ **Resolvido em 2026-05-06**: commit `41c6212` em `origin/main`.
 - **B-02** — ~~Documentação produto desatualizada (F0 vs F2).~~ **Resolvido em 2026-05-05**.
-- **B-03** — ~~Figma MCP não configurado.~~ **Mitigado**: F3 entregue sem Figma MCP, com base em Figma Make + brief textual (registrado como desvio aceito no F3_DONE §11).
+- **B-03** — ~~Figma MCP não configurado.~~ **Mitigado**: F3 entregue sem Figma MCP, com base em Figma Make + brief textual.
 - **B-04** — ~~Arquivo Figma ainda não existe.~~ **Mitigado**: idem B-03.
 - **B-05** — ~~Mudanças da F3 ainda não commitadas em git.~~ **Resolvido** em 2026-05-06 (`713d773`, `d2dc898`, push em `origin/main`).
-- **B-06** — ~~PRD §3 alterado fora do escopo permitido.~~ **Resolvido** em 2026-05-06 antes do commit da F3 (KPI canônico restaurado para US$ 50/mês).
+- **B-06** — ~~PRD §3 alterado fora do escopo permitido (US$ 50→5).~~ **Resolvido** em 2026-05-06 (KPI restaurado para US$ 50). **Reaberto e re-resolvido** via **D-16**: teto de IA como **cap operacional configurável** (ENV + `cost_budgets`); **alvo típico** na validação F4/F5 do motor **US$ 5/mês** — não constante hardcoded no produto.
+- **B-07** — Rodada 7 do PRD ainda **não commitada** em git. Aguarda aprovação explícita do operador. Risco: divergência entre repo local e remoto se editar mais antes de commit.
 
 ## Riscos conhecidos
 
-- **R-01** ~~Scope creep em F3.~~ **Verificado**: nenhuma fase futura adiantada. F3 ficou dentro do escopo do brief.
-- **R-02** Drift de prompts versionados — sem alteração observada em F3.
-- **R-03** Divergência de budget (50 vs 5 em dev) — em vigor (O-01).
-- **R-04** ~~Validação E2E formal de F3 ainda parcial~~ **Resolvido** com `F3_QA_DONE.md` + `F3_QA_REVIEW_BY_AGENT5.md`.
-- **R-05** **Warning persistente de ESLint/Next no build** — registrado em F0/F1/F2 e agora também F3 reviews. Já é débito técnico crônico. Sugestão: tratar fora do ciclo de fases, em uma "house-cleaning task".
-- **R-06** LGPD — retenção 30/90/180/365d e endpoint de purge continuam em F5.
-- **R-07** Dependência operacional de cron — Vercel Cron é único orquestrador.
-- **R-08** **Estabilidade do dev server** — handback F3 reportou `EMAXCONNSESSION` (Postgres) e cache Next quebrado durante longas sessões. Mitigado pelo singleton em `db/index.ts` e `predev` limpando `.next`. Agent 5 confirmou que após ambiente limpo as rotas críticas respondem `200`. Risco persistente em sessões longas — observar.
-- **R-09** ~~KPI operacional (30 ideias revisadas em ≤30min) não comprovado~~ **Resolvido** em QA estruturado de F3 (`30/30` reportado).
-- **R-10** **Snooze sem `snoozed_until`** — UI mostra "snooze" via `feedback.action='snooze'`, sem expiração automática. Limite conhecido até migration aprovada (provavelmente em F4).
-- **R-11** **Reversão de filtrada via override** — `feedback.action='unfilter_override'` mantém `blacklist_tags` intacta; é override de exibição. Garante reversão sem alterar schema, mas exige consciência de que ranking pode mostrar item filtrado se houver feedback registrado.
+- **R-01** ~~Scope creep em F3.~~ **Verificado**: nenhuma fase futura adiantada.
+- **R-02** Drift de prompts versionados — sem alteração observada. Em F4A/B/C novos prompts entram como versão `001` em arquivos novos (P-EVI, P-TRD, P-OPP, P-IDE-002, P-BRF-002), sem tocar legados.
+- **R-03** ~~Divergência de budget (50 vs 5 em dev).~~ **Resolvido** por D-16: um único modelo de cap **configurável**; alvo típico documentado na validação F4/F5 é US$ 5/mês. O-01 encerrada.
+- **R-04** ~~Validação E2E formal de F3 ainda parcial~~ **Resolvido**.
+- **R-05** **Warning persistente de ESLint/Next no build** — débito crônico. Tratar fora do ciclo de fases.
+- **R-06** LGPD — retenção 30/90/180/365d e endpoint de purge migram para **F6** (antes era F5).
+- **R-07** Dependência operacional de cron — Vercel Cron é único orquestrador automático. F4A adiciona `/api/manual/analyze` autenticado, fora do cron.
+- **R-08** **Estabilidade do dev server** — `EMAXCONNSESSION` mitigado por singleton de DB + `predev` limpando `.next`. Risco persistente em sessões longas — observar.
+- **R-09** ~~KPI operacional (30 ideias revisadas em ≤30min) não comprovado~~ **Resolvido**.
+- **R-10** **Snooze sem `snoozed_until`** em ideias legadas — limite conhecido. F4A introduz `opportunity_cards.snoozed_until` para o funil novo.
+- **R-11** **Reversão de filtrada via override** — `feedback.action='unfilter_override'` mantém `blacklist_tags` intacta; override de exibição.
+- **R-12** **Confusão entre `signals` e `evidences`** — alta criticidade. Mitigado por glossário em [`F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §18, badge `LEGADO` na UI antiga, e DP-16 (decisão dura: nunca renomear ou substituir).
+- **R-13** **Source Confidence inflada** — mitigado por cap automático no motor (`distinct_external==1 ⇒ ≤0.40`) e exclusão de manual/watch da contagem (D-14, RF-28).
+- **R-14** **Custo IA explodir em F4B com Trends** — mitigado por `assertBudget()` + cap **vigente** (ENV/`cost_budgets`; alvo típico validação F4/F5 US$ 5 — D-16) + obrigação do Agent 9 medir antes de subir produção.
+- **R-15** **Schema F4A grande** — mitigado por migration única, idempotente, exibida em SQL (DP-02). Sem `DROP`. Apenas `CREATE` + `ALTER ADD COLUMN nullable`.
+- **R-16** **Pipeline legado quebrar com adapter `signals → evidences`** — mitigado por executar adapter no mesmo handler de `extract` (sucesso/falha conjunto).
+- **R-17** **Reabertura de PRD** — feita conscientemente nesta rodada com decisões D-11..D-17 explícitas. Toda mudança nominalmente justificada.
 
 ## Próxima ação recomendada
 
-1. Operador decide entre 2 caminhos pós-F3:
-   - **(A)** Iniciar F4 (Feedback dinâmico + Brief on-demand).
-   - **(B)** Adicionar 1 coletor (PH, RSS, Apple ou Stack Exchange) antes de F4.
-2. Recomendação default do Agent 0, após QA estruturado concluído: **(A)**.
+1. Operador valida rodada 7 (PRD + DECISIONS + IMPLEMENTATION_PLAN + PROJECT_STATE + AGENTS + NEXT_STEPS + 2 docs em `architecture/` + 3 briefs em `agents/`).
+2. Operador autoriza commit/push da rodada 7 em `main`.
+3. Operador ativa Agent 8 em chat dedicado (prompt copy-paste em [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §7).
+4. Agent 8 reporta "approval first" antes de qualquer edit (lista arquivos + SQL preview migration F4A + estimativa de custo) — **Agent 0 valida**, depois operador aprova **escopo**; **migration** só após **aprovação explícita e específica** daquele SQL (sem autorização genérica).
+5. Após F4A done + revisão Agent 5 → ativar Agent 9 (F4B).
+6. Após F4B done + revisão Agent 5 → ativar Agent 10 (F4C).
+7. F4 fecha após F4C `approved`. Daí F5A.
 
 ## Do Not Do Yet
 
 Bloqueios duros até nova aprovação:
 
-- Nenhum coletor adicional além de HN. PH, RSS, Apple RSS, Stack Exchange, manual entry só após HN estabilizar e operador aprovar caso a caso.
-- Nenhuma feature de F4 (feedback dinâmico + brief humano on-demand) ou F5 (hardening) adiantada.
-- Nenhuma migration nova sem SQL preview + aprovação humana (inclui campos como `snoozed_until` que ficaram como gap em F3).
-- Nenhum commit/push/PR sem aprovação explícita (DP-03).
-- Nenhuma alteração em prompts `001` já em produção. Para mudar, criar versão `002`.
+- Nenhuma fase futura adiantada (F4B, F4C, F5x, F6 só nas suas vezes).
+- Nenhum coletor novo enquanto F4A não fechar.
+- Nenhuma migration nova sem SQL preview + **aprovação humana explícita e específica daquela migration** (Q-G).
+- Nenhuma alteração em prompts `001` já em produção (P-EXT/P-FIL/P-CLU/P-IDE/P-BRF). Para mudar, criar versão `002`. P-EVI/P-TRD/P-OPP/P-IDE-002/P-BRF-002 entram como **arquivos novos** versão `001`.
 - Nenhuma chamada IA fora dos pipelines existentes que ignore `assertBudget()`.
-- Sem pacote npm novo sem justificativa (DP-14). F3 fechou com **zero** novo pacote.
+- Sem pacote npm novo sem justificativa (DP-14).
+- Não substituir/renomear `signals` (DP-16).
+- Não desligar pipeline legado F2 (`runIdeaGeneration`, P-IDE-001, P-BRF-001).
+- Não tocar `.env*`, secrets, `mcp.json`.
+- Nenhum commit/push/PR sem aprovação explícita (DP-03).
 
 ## Open questions
 
-- OQ-01 — ~~Git local agora ou ao iniciar F3?~~ **Resolvido** em 2026-05-06.
-- OQ-02 — Após F3, adicionar coletor antes de F4? **Pendente** (default sugerido: não, focar em F4).
-- OQ-03 — ~~Figma usado? Em que nível?~~ **Resolvido** (O-05).
-- OQ-04 — ~~Agent 7 entra agora ou só em F4/F5?~~ **Resolvido:** Agent 7 será usado agora, entre F3 e F4.
-- OQ-05 — Manter `AI_MONTHLY_BUDGET_USD=5` em dev até quando? **Decisão pendente.** Sem urgência.
-- OQ-06 — ~~Operador vai criar Figma e configurar Figma MCP?~~ **Resolvido**: Agent 6 entregou F3 com Figma Make + brief textual, sem Figma MCP. Eventual divergência visual fina é débito conhecido (F3_DONE §11).
-- OQ-07 — **Quando o ESLint/Next plugin warning vai virar tarefa formal?** Está em todos os reviews desde F0. Sugestão: criar uma "house-cleaning task" não-fásica.
-- OQ-08 — **`/coleta` continua como rota legada acessível ou some?** Decisão registrada em **O-09** (mantida fora da nav, acessível por URL direto).
-- OQ-09 — **Comportamento do snooze** depende de migration `snoozed_until`. Quando aprovar?
+- OQ-01..OQ-08 — fechadas em rodadas anteriores.
+- OQ-09 — ~~Snooze sem `snoozed_until`.~~ **Endereçado em F4A** via `opportunity_cards.snoozed_until` para o funil; legado mantém comportamento atual.
+- OQ-10 — ~~**Backfill retroativo `signals → evidences` em F4A?**~~ **Fechada (operador 2026-05-09):** F4A processa **apenas sinais novos**; **sem** backfill retroativo. Backfill futuro = job manual opcional com dry-run e **aprovação separada** (ver [`AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), RF-24).
+- OQ-11 — **Cadência de `/api/cron/collect-trends` em F4B**: piggyback em seg/qui (15:00 entre `collect-hn` e `extract`) ou cron separado? Decisão fica para Agent 9 propor com base em rate limit Trends.
+- OQ-12 — **Quando `/coleta` legada some?** Mantida em F4A. Considerar deprecar em F5+ se redundante com `/funil/manual` + `/funil/source-confidence`.
+- OQ-13 — **F4A inclui badge `LEGADO` em quais telas exatamente?** Sugestão Agent 0: Dashboard, Ranking, Filtradas, Detalhe da Ideia, Brief MVP, Sinais, Clusters. Não em Custos, Configurações, Fontes, Pesos, Blacklist, Prompts (são compartilhadas legado+novo). Confirmar em F4A.
 
 ## Status labels usados
 

@@ -1,8 +1,8 @@
 # GoMVP V1 — Implementation Plan
 
-> **Versão:** 1.0
-> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). F4 ainda não iniciada. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
-> **Fonte canônica:** [`docs/PRD.md`](PRD.md). Este documento operacionaliza §24 (plano incremental), Apêndice B (tarefas técnicas), Apêndice C (gates) e Apêndice E (princípios operacionais) em formato executável por agente. **Não introduz escopo novo.** Em qualquer divergência, o PRD prevalece.
+> **Versão:** 1.1 (rodada 7 do PRD).
+> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4 redesenhada como F4A/B/C (motor de oportunidades)** e **F5 redesenhada como Source Expansion (PH > Reddit > YouTube > Reviews)**. Hardening migra para F6. Próximo gate: F4A (sob aprovação). Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
+> **Fonte canônica:** [`docs/PRD.md`](PRD.md). Detalhes de arquitetura F4: [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md). Roadmap F5: [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Em qualquer divergência, o **PRD vence**.
 
 ---
 
@@ -12,12 +12,19 @@
 |---|---|---|---|---|
 | F0 Fundação | Agent 2 | [`docs/agents/AGENT_2_F0_FUNDACAO.md`](agents/AGENT_2_F0_FUNDACAO.md) | `docs/handback/F0_DONE.md` | Agent 5 |
 | F1 Coleta HN | Agent 3 | [`docs/agents/AGENT_3_F1_COLETA_HN.md`](agents/AGENT_3_F1_COLETA_HN.md) | `docs/handback/F1_DONE.md` | Agent 5 |
-| F2 IA + Ideias | Agent 4 | [`docs/agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | `docs/handback/F2_DONE.md` | Agent 5 |
+| F2 IA + Ideias (legado) | Agent 4 | [`docs/agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | `docs/handback/F2_DONE.md` | Agent 5 |
 | F3 Painel + Ações | Agent 6 | [`docs/agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md) | [`docs/handback/F3_DONE.md`](handback/F3_DONE.md) | Agent 5 |
-| F4 Feedback + Brief | a definir | a definir | `docs/handback/F4_DONE.md` | Agent 5 |
-| F5 Hardening | a definir | a definir | `docs/handback/F5_DONE.md` | Agent 5 |
+| F3 QA | Agent 7 | [`docs/agents/AGENT_7_QA.md`](agents/AGENT_7_QA.md) | [`docs/handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | Agent 5 |
+| **F4A Motor + Evidence Layer (HN-only)** | **Agent 8** | [`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) | `docs/handback/F4A_DONE.md` | Agent 5 |
+| **F4B Cross-source Google Trends** | **Agent 9** | [`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | `docs/handback/F4B_DONE.md` | Agent 5 |
+| **F4C Feedback + Idea/Brief gates** | **Agent 10** | [`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md) | `docs/handback/F4C_DONE.md` | Agent 5 |
+| F5A Product Hunt | a definir | a definir | `docs/handback/F5A_DONE.md` | Agent 5 |
+| F5B Reddit | a definir | a definir | `docs/handback/F5B_DONE.md` | Agent 5 |
+| F5C YouTube | a definir | a definir | `docs/handback/F5C_DONE.md` | Agent 5 |
+| F5D Reviews | a definir | a definir | `docs/handback/F5D_DONE.md` | Agent 5 |
+| F6 Hardening | a definir | a definir | `docs/handback/F6_DONE.md` | Agent 5 |
 
-Sequência **estritamente serial**: cada fase só começa após `approved` ou `approved_with_minors` do Agent 5 sobre a fase anterior.
+Sequência **estritamente serial** dentro do bloco F4 (F4A → F4B → F4C). F5 também serial (F5A → F5B → F5C → F5D), uma fonte por vez sob aprovação. F6 ao final.
 
 ---
 
@@ -26,7 +33,7 @@ Sequência **estritamente serial**: cada fase só começa após `approved` ou `a
 Aplicam-se a **todas as fases** e nunca podem ser violados sem aprovação escrita do operador:
 
 1. Estrutura **flat** em `src/...` na raiz. Sem monorepo, sem `apps/web/`.
-2. Toda migration é **gerada via `drizzle-kit generate`** e **exibida em SQL ao operador antes de aplicar**. `db:migrate` só roda após aprovação humana explícita.
+2. Toda migration é **gerada via `drizzle-kit generate`** e **exibida em SQL ao operador antes de aplicar**. **Não há autorização genérica** para aplicar migrations: cada arquivo/migration precisa de **aprovação explícita e específica** do operador. `db:migrate` só roda após essa aprovação.
 3. Nenhum `git commit`, `git push` ou PR sem aprovação explícita do operador.
 4. Nenhum MCP é dependência runtime. Toda integração de produção é via SDK direto ou fetch da API pública.
 5. Toda chamada de IA passa por `assertBudget()` e grava em `ai_usage_logs` com `prompt_version` salvo.
@@ -35,7 +42,7 @@ Aplicam-se a **todas as fases** e nunca podem ser violados sem aprovação escri
 8. F2 começa **HN-only**; demais coletores (PH, RSS, Apple RSS, Stack Exchange, manual) entram **um por vez sob aprovação**, depois que HN estiver estável de ponta-a-ponta.
 9. Blacklist sempre ativa após F1. Ranking principal só mostra itens sem `blacklist_tags`. Itens filtrados ficam em aba **Filtradas** (auditoria).
 10. Vercel Cron é o **único orquestrador** na V1. `pg_cron` e Supabase Scheduled Functions ficam fora.
-11. Hard cap de US$ 50/mês de IA. Thresholds fixos: **0.80 warning**, **0.90 auto-stop em cron**, **1.00 hard-stop**.
+11. **Teto de IA** configurável via **ENV** (ex.: `AI_MONTHLY_BUDGET_USD`) e `cost_budgets.monthly_budget_usd`. Na validação **F4/F5** do motor, o **alvo operacional** documentado é **US$ 5/mês** (D-16) — **não** tratar como constante hardcoded eterna no produto. Thresholds fixos sobre o budget vigente: **0.80 warning**, **0.90 auto-stop em cron**, **1.00 hard-stop**.
 12. Nenhum dado pessoal sensível persistido. Retenção: 30d `raw_items`, 90d `signals`, 180d `ideas`/`briefs`, 365d `ai_usage_logs`.
 13. `category_bonus` e `preference_affinity` cap em ±0.05 cada. Não dominam o score.
 14. Pacote NPM novo exige justificativa explícita (operação simples > sofisticação).
@@ -215,41 +222,110 @@ Toda variável nova entra em `.env.example` no PR/handback que a introduz. Serve
 
 ---
 
-## F4 — Feedback + Brief
+## F4A — Motor Base / Evidence Layer (HN-only)
 
-**Owner:** a definir. **Tempo estimado:** 3–4 dias.
+**Owner:** Agent 8 ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md)). **Tempo estimado:** 5–7 dias.
 
-### Entregáveis
+Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §13 (F4A) e brief operacional do Agent 8.
 
-- Tabela `feedback` populada por ações (aprovar/rejeitar/promissora) com `weights_delta` opcional.
-- Regras editáveis (filtro/scoring/blacklist).
-- Few-shot dinâmico em P-IDE-001 e P-FIL-001 (top N aprovados/rejeitados).
-- Embeddings de preferência: centroides em `feedback`, subscore `preference_affinity` cap ±0.05.
-- Prompt P-BRF-001 + tela Brief MVP. Brief só gera após `status='approved'`.
+### Entregáveis (resumo)
 
-### Gates F4
+- Migration `0004_*.sql`: `watch_topics`, `manual_inputs`, `evidences`, `evidence_clusters`, `trend_candidates`, `need_clusters`, `opportunity_cards`, `opportunity_evidences`. Adição de `opportunity_id`/`gate_state` em `ideas`. Adição de `'evidence'` em `blacklist_terms.scope`.
+- Pasta nova `src/sources/` (`hn/signal-to-evidence`, `manual/normalizer`, `watch/normalizer`).
+- Pasta nova `src/motor/` (`evidence-store`, `trend-engine`, `need-cluster`, `opportunity-score`, `opportunity-gate`, `prompts`).
+- Prompts versão `001`: `P-EVI-001`, `P-TRD-001`, `P-OPP-001` (seedados em `prompts`).
+- Endpoints: `/api/cron/build-evidence`, `/api/cron/score-opportunities`, `/api/manual/analyze` (este último fora do cron, autenticado).
+- Pesos `f4_*` seedados.
+- Grupo de UI **Funil** (8 rotas): radar, watch-topics, manual, trends, need-clusters, opportunities, opportunities/[id], source-confidence.
+- F3 legado intacto e marcado com badge `LEGADO`.
 
-- [ ] 2 ciclos de feedback movem precisão do top-10.
-- [ ] Brief gerado em < 30s para 5 ideias aprovadas.
+### Gates F4A
+
+- [ ] Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill retroativo). Smoke em dev: após ciclo de teste, amostra ≥ **10** `evidences` criadas a partir de **novos** `signals` (ou evidência documentada de 1:1 para cada signal novo no período).
+- [ ] ≥ 1 `opportunity_card` com `gate_state='qualified_opportunity'`.
+- [ ] Em **F4A (HN-only):** toda `qualified_opportunity` exibe na UI **Baixa confiança de fonte** (ou equivalente); motor valida **estrutura**, não mercado amplo.
+- [ ] **`source_confidence ≤ 0.40` em 100% das opportunities** (assertion HN-only).
+- [ ] Manual analysis end-to-end ok.
+- [ ] State machine de gates testada (`scripts/test-opportunity-gate.ts`).
+- [ ] `assertBudget()` continua bloqueando.
+- [ ] F3 legado sem regressão.
+- [ ] Custo IA agregado da rodada de teste compatível com o **cap vigente** em dev (cenário típico D-16: ≤ US$ 0,10 incremental na fase).
 
 ---
 
-## F5 — Hardening
+## F4B — Cross-source com Google Trends
+
+**Owner:** Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). **Tempo estimado:** 4–6 dias.
+
+### Entregáveis (resumo)
+
+- Pasta `src/sources/gtrends/` (`README.md`, `collector.ts`, `normalizer.ts`).
+- Endpoint `/api/cron/collect-trends` + atualização de `vercel.json`.
+- Evidence `search_momentum` populando.
+- Atualização em `opportunity-score` para considerar Trends em `trend_score`.
+- Atualização UI em `/funil/trends` e `/funil/source-confidence`.
+
+### Gates F4B
+
+- [ ] ≥ 30 evidences `search_momentum`/dia em dev por 3 dias seguidos.
+- [ ] ≥ 1 `opportunity_card` com `source_confidence ≥ 0.65` (HN + GT).
+- [ ] Caso "trend forte sem dor" → `gate_state='trend_only'` correto.
+- [ ] Caso "dor sem trend" → `gate_state='pain_candidate'` correto.
+- [ ] Custo IA da fase em dev ≤ US$ 0,30.
+
+---
+
+## F4C — Feedback estruturado + Idea/Brief gates
+
+**Owner:** Agent 10 ([`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md)). **Tempo estimado:** 3–5 dias.
+
+### Entregáveis (resumo)
+
+- Migration `0006_*.sql`: `feedback` polimórfico (`target_kind`, `target_id`, `reason_code`, `gate_after`) + backfill seguro do legado.
+- Prompts versão `001`: `P-IDE-002`, `P-BRF-002` (P-IDE-001/P-BRF-001 mantidos).
+- `src/motor/idea-from-opportunity.ts`, `src/motor/brief-from-idea.ts`.
+- Endpoints `/api/funil/ideas/generate`, `/api/funil/brief/generate` (autenticados, fora do cron).
+- UI: ações de aprovação/rejeição em opportunities/ideas exigem `reason_code`.
+- Novas rotas `/funil/ideas`, `/funil/ideas/[id]`, `/funil/briefs`, `/funil/feedback-history`.
+- Few-shot dinâmico em P-OPP-001 e P-IDE-002. Embeddings de preferência cap ±0.05.
+
+### Gates F4C
+
+- [ ] Backfill `feedback` legado validado: `count(*) WHERE target_kind IS NULL = 0`.
+- [ ] Reason code obrigatório em toda transição (validação Zod).
+- [ ] Idea só nasce com `opportunity_id NOT NULL` quando criada via funil.
+- [ ] Brief só nasce com `idea.gate_state='idea_allowed'`.
+- [ ] 2 ciclos de feedback movem `opportunity_score` médio do top-10.
+- [ ] Custo IA da fase em dev ≤ US$ 0,50.
+
+---
+
+## F5 — Source Expansion (incremental)
+
+Detalhes em [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Ordem: **PH > Reddit > YouTube > Reviews**. RSS/Apple/Stack Exchange ficam como backup.
+
+Cada fonte segue o padrão `src/sources/<source>/` + endpoint `/api/cron/collect-<source>` + atualização de `sources` (uma linha) + handback dedicado (`F5x_DONE.md`) + revisão Agent 5.
+
+**F5 não altera o motor.** Se exigir, parar e escalar Agent 0.
+
+---
+
+## F6 — Hardening
 
 **Owner:** a definir. **Tempo estimado:** 2–3 dias.
 
 ### Entregáveis
 
-- Kill switch testado E2E.
+- Kill switch testado E2E no **cap mensal vigente** configurado (cenário típico de validação F4/F5: US$ 5/mês).
 - Retries idempotentes em coletores e pipeline.
 - Alertas (e-mail/webhook) em warning de orçamento e em falha de coleta consecutiva.
 - Job de retenção 30/90/180/365d. Endpoint de purge por `source_url`.
 - `RUNBOOK.md`. Backup do banco testado em sandbox.
 
-### Gates F5
+### Gates F6
 
 - [ ] Hard cap dispara em teste; alerta chega.
-- [ ] Job de retenção limpa janela esperada sem corromper dados.
+- [ ] Retenção limpa janela esperada sem corromper dados.
 - [ ] Restauração de backup em sandbox sobe banco em estado coerente.
 - [ ] Endpoint de purge por URL remove registros conforme LGPD.
 
@@ -258,25 +334,27 @@ Toda variável nova entra em `.env.example` no PR/handback que a introduz. Serve
 ## Ordem de execução resumida
 
 ```
-F0 → F0_DONE → Agent 5 → approved
-   → F1 → F1_DONE → Agent 5 → approved
-   → F2 (HN-only) → F2_DONE → Agent 5 → approved
-   → [opcional: 1 coletor adicional sob aprovação, repetir gate]
-   → F3 → F3_DONE → Agent 5 → approved
-   → F4 → F4_DONE → Agent 5 → approved
-   → F5 → F5_DONE → Agent 5 → approved
-   → V1 GA interno
+F0 → F1 → F2 → F3 → (DONE até aqui)
+   → F4A (motor + evidence + opportunity, HN-only) → Agent 5 → approved
+   → F4B (Google Trends, cross-source) → Agent 5 → approved
+   → F4C (feedback + idea/brief gates) → Agent 5 → approved  [F4 fechada]
+   → F5A (Product Hunt) → Agent 5 → approved
+   → F5B (Reddit) → Agent 5 → approved
+   → F5C (YouTube) → Agent 5 → approved
+   → F5D (Reviews) → Agent 5 → approved
+   → F6 (hardening) → Agent 5 → approved
+   → V1 GA interno V2
 ```
-
-Total estimado: ~3 a 4 semanas, 1 dev full-time, conforme PRD §24.
 
 ---
 
-## Critérios de sucesso da V1 (PRD §22)
+## Critérios de sucesso da V1 V2 (PRD §22)
 
 - Pipeline roda 2x/semana sem intervenção em ≥ 90% das execuções.
-- ≥ 70% do top-10 julgado "vale ler".
-- ≥ 4 ideias aprovadas/mês.
+- ≥ 70% do top-10 do **funil de oportunidades** julgado "vale aprofundar".
+- ≥ 4 **opportunities aprovadas/mês**.
+- ≥ 2 **ideias aprovadas/mês** a partir de opportunity.
 - ≥ 1 MVP construído/mês a partir do GoMVP.
-- Custo IA real ≤ US$ 50/mês (hard cap nunca disparado em condição normal).
-- Operação ≤ 30 min/dia.
+- **Custo IA real ≤ cap mensal vigente** (na validação F4/F5, alvo típico US$ 5/mês — D-16; valor por ENV/`cost_budgets`).
+- Operação ≤ 30 min/dia (KPI 30).
+- ≥ 50% das opportunities qualified com `source_confidence ≥ 0.65` após F4B em produção.
