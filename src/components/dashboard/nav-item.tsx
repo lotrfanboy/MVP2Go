@@ -20,6 +20,11 @@ export function NavItem({ item }: { item: NavItemConfig }) {
     >
       <span className="inline-flex h-4 w-4 items-center justify-center text-[10px] font-semibold">{item.icon}</span>
       <span className="truncate">{item.label}</span>
+      {item.legacy ? (
+        <span className="ml-auto rounded bg-muted px-1 text-[9px] font-semibold uppercase text-muted-foreground">
+          Legado
+        </span>
+      ) : null}
     </a>
   );
 }

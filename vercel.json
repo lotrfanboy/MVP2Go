@@ -10,8 +10,16 @@
       "schedule": "30 11 * * 1,4"
     },
     {
+      "path": "/api/cron/build-evidence",
+      "schedule": "45 11 * * 1,4"
+    },
+    {
       "path": "/api/cron/generate",
       "schedule": "0 12 * * 1,4"
+    },
+    {
+      "path": "/api/cron/score-opportunities",
+      "schedule": "15 12 * * 1,4"
     }
   ]
 }

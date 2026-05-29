@@ -165,7 +165,7 @@ E entrega:
 
 ### Pré-requisitos
 
-- Decisão D-18 (futura): qual fonte de review iniciar (Apple App Store é mais simples via RSS).
+- Decisão futura F5D: qual fonte de review iniciar (Apple App Store é mais simples via RSS).
 - Política de citação literal: nunca expor brand + frase ofensiva no brief; sumarizar.
 
 ### Custo esperado

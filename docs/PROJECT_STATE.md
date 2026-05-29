@@ -15,12 +15,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Current phase** | F4 redesenhada como F4A/B/C (Opportunity Motor). Documentação aprovada na rodada 7 do PRD. Aguardando autorização do operador para ativar Agent 8 (F4A). |
+| **Current phase** | F4A — Opportunity Motor em correção. Agent 8 entregou F4A, Agent 5 revisou como `rejected`; Agent 0 reavaliou o gate e criou Agent 8.5 para correção antes de qualquer F4B. |
 | **Last completed phase** | F3 — Painel + Ações (com QA estruturado) |
-| **Active agent** | Agent 0 (Orchestrator) — encerrou redesign F4/F5; entregou rodada 7 do PRD, briefs Agent 8/9/10, arquitetura `F4_OPPORTUNITY_MOTOR.md` e `F5_SOURCE_EXPANSION.md`. |
-| **Last reviewer agent** | Agent 5 — fechou QA estruturado de F3 com `approved_with_minors` |
-| **Current branch** | `main` (push até `d2dc898`). Rodada 7 ainda **não commitada** (aguarda aprovação do operador). |
-| **Last updated** | 2026-05-06 (rodada 7) |
+| **Active agent** | Agent 8.5 (próximo) — correção pontual da F4A conforme D-18; Agent 0 preparou o brief. |
+| **Last reviewer agent** | Agent 5 — revisou F4A como `rejected` em [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md). |
+| **Current branch** | `main` |
+| **Last updated** | 2026-05-28 (reavaliação F4A) |
 
 ## Status por fase
 
@@ -30,7 +30,7 @@
 | F1 — Coleta HN | [`agents/AGENT_3_F1_COLETA_HN.md`](agents/AGENT_3_F1_COLETA_HN.md) | [`handback/F1_DONE.md`](handback/F1_DONE.md) | [`handback/F1_REVIEW.md`](handback/F1_REVIEW.md) | DONE (`approved_with_minors`) |
 | F2 — IA + Ideias (legado) | [`agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | [`handback/F2_DONE.md`](handback/F2_DONE.md) | [`handback/F2_REVIEW.md`](handback/F2_REVIEW.md) | DONE (`approved_with_minors`) |
 | F3 — Painel + Ações | Agent 6 ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) + [`handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) + [`handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md) | DONE (`approved_with_minors`) |
-| **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) | — | — | **READY TO START** (aguardando aprovação) |
+| **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) + fix [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) | [`handback/F4A_DONE.md`](handback/F4A_DONE.md); aguardando `F4A_FIX_DONE.md` | [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md) + reavaliação Agent 0 | **NEEDS_CORRECTION** (Agent 8.5; não iniciar F4B) |
 | **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | — | — | PENDING (após F4A) |
 | **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md) | — | — | PENDING (após F4B) |
 | F5A — Product Hunt | a definir | — | — | PENDING (após F4C) |
@@ -123,13 +123,13 @@ Evidência cruzada com handbacks e arquivos no repositório:
 
 **Aguardando do operador:**
 
-1. ~~Validação dos docs entregues nesta rodada (rodada 7).~~ **Direção estratégica aprovada** (2026-05-09); ajustes finais de docs/skills aplicados (D-16 configurável, Q-G/Q-H/F4A gates).
-2. **Aprovação explícita para executar** commit/push (Q-F).
-3. Autorização para ativar Agent 8 em chat dedicado (prompt copy-paste em [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §7).
+1. ~~Validação dos docs entregues nesta rodada (rodada 7).~~ **Direção estratégica aprovada** (2026-05-09).
+2. ~~Ativação inicial do Agent 8.~~ **F4A implementada e revisada como rejected**.
+3. **Correção F4A pelo Agent 8.5** com o gate D-18: sem exigir `qualified_opportunity`, sem falsear volume, aplicando blacklist/domain-risk/`not_indielab_fit` antes de promover `opportunity_candidate`.
 
 ## Reviews pendentes
 
-Nenhuma review de gate de implementação pendente. F3 fechada. Próxima review: F4A (após handback do Agent 8).
+F4A tem review Agent 5 concluída como `rejected`. Próxima review: nova revisão Agent 5 após `F4A_FIX_DONE.md` do Agent 8.
 
 ## Blockers conhecidos
 
@@ -139,7 +139,8 @@ Nenhuma review de gate de implementação pendente. F3 fechada. Próxima review:
 - **B-04** — ~~Arquivo Figma ainda não existe.~~ **Mitigado**: idem B-03.
 - **B-05** — ~~Mudanças da F3 ainda não commitadas em git.~~ **Resolvido** em 2026-05-06 (`713d773`, `d2dc898`, push em `origin/main`).
 - **B-06** — ~~PRD §3 alterado fora do escopo permitido (US$ 50→5).~~ **Resolvido** em 2026-05-06 (KPI restaurado para US$ 50). **Reaberto e re-resolvido** via **D-16**: teto de IA como **cap operacional configurável** (ENV + `cost_budgets`); **alvo típico** na validação F4/F5 do motor **US$ 5/mês** — não constante hardcoded no produto.
-- **B-07** — Rodada 7 do PRD ainda **não commitada** em git. Aguarda aprovação explícita do operador. Risco: divergência entre repo local e remoto se editar mais antes de commit.
+- **B-07** — ~~Rodada 7 do PRD ainda não commitada em git.~~ **Resolvido**: documentação rodada 7 commitada/pushada antes de iniciar Agent 8.
+- **B-08** — **F4A rejected / gate oficial precisava ajuste.** Agent 5 rejeitou por ausência de `qualified_opportunity` e <10 evidences; Agent 0 reclassificou parte disso como regra documental inadequada para HN-only. Bloqueios reais: opportunity com categoria bloqueada/alto risco passou como `opportunity_candidate`; `test:opportunity-gate` não encerra; cobertura de gate fraca.
 
 ## Riscos conhecidos
 
@@ -163,11 +164,11 @@ Nenhuma review de gate de implementação pendente. F3 fechada. Próxima review:
 
 ## Próxima ação recomendada
 
-1. Operador valida rodada 7 (PRD + DECISIONS + IMPLEMENTATION_PLAN + PROJECT_STATE + AGENTS + NEXT_STEPS + 2 docs em `architecture/` + 3 briefs em `agents/`).
-2. Operador autoriza commit/push da rodada 7 em `main`.
-3. Operador ativa Agent 8 em chat dedicado (prompt copy-paste em [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §7).
-4. Agent 8 reporta "approval first" antes de qualquer edit (lista arquivos + SQL preview migration F4A + estimativa de custo) — **Agent 0 valida**, depois operador aprova **escopo**; **migration** só após **aprovação explícita e específica** daquele SQL (sem autorização genérica).
-5. Após F4A done + revisão Agent 5 → ativar Agent 9 (F4B).
+1. Operador roda o prompt de [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) em chat dedicado para Agent 8.5.
+2. Agent 8.5 corrige somente F4A: gate/blacklist/launchability/teste, sem iniciar F4B e sem nova fonte.
+3. Agent 8.5 entrega `docs/handback/F4A_FIX_DONE.md`.
+4. Agent 5 revisa F4A contra D-18 e critérios atualizados.
+5. **Somente se F4A for approved/approved_with_minors**, ativar Agent 9 (F4B).
 6. Após F4B done + revisão Agent 5 → ativar Agent 10 (F4C).
 7. F4 fecha após F4C `approved`. Daí F5A.
 

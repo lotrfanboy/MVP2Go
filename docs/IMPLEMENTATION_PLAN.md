@@ -241,12 +241,13 @@ Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architec
 
 ### Gates F4A
 
-- [ ] Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill retroativo). Smoke em dev: após ciclo de teste, amostra ≥ **10** `evidences` criadas a partir de **novos** `signals` (ou evidência documentada de 1:1 para cada signal novo no período).
-- [ ] ≥ 1 `opportunity_card` com `gate_state='qualified_opportunity'`.
-- [ ] Em **F4A (HN-only):** toda `qualified_opportunity` exibe na UI **Baixa confiança de fonte** (ou equivalente); motor valida **estrutura**, não mercado amplo.
+- [ ] Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill retroativo). Smoke em dev: adaptar corretamente todos os sinais novos elegíveis no período; se houver menos de 10, registrar como **dados insuficientes**, não falha. Validar lote ≥ **10** com fixture/dev seed controlado quando necessário.
+- [ ] ≥ 1 `opportunity_card` criada a partir de `need_cluster` válido. **`qualified_opportunity` não é obrigatório em F4A HN-only**; F4A valida estrutura do motor, não mercado amplo.
+- [ ] Em **F4A (HN-only):** toda opportunity exibida como candidata/qualificada comunica **Baixa confiança de fonte** (ou equivalente).
 - [ ] **`source_confidence ≤ 0.40` em 100% das opportunities** (assertion HN-only).
 - [ ] Manual analysis end-to-end ok.
-- [ ] State machine de gates testada (`scripts/test-opportunity-gate.ts`).
+- [ ] Motor **rejeita** opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit`: `launchability_score` zero/quase zero, `gate_state='rejected'`, `reason_codes` preenchidos. Saúde/médico/regulatório/desinformação sensível é exemplo, não regra especial.
+- [ ] State machine de gates testada (`scripts/test-opportunity-gate.ts`) e o script encerra sozinho.
 - [ ] `assertBudget()` continua bloqueando.
 - [ ] F3 legado sem regressão.
 - [ ] Custo IA agregado da rodada de teste compatível com o **cap vigente** em dev (cenário típico D-16: ≤ US$ 0,10 incremental na fase).

@@ -187,7 +187,7 @@ flowchart TD
 - RF-03. Normalização para `signals` com `language` (`pt`/`en`/`other`).
 - RF-04. Dedupe **determinístico** por hash de URL canonicalizada + hash de texto normalizado.
 - RF-05. Filtro híbrido: regras determinísticas + classificador IA leve (P-FIL-001) respeitando guard de orçamento.
-- RF-06. **Blacklist obrigatória** aplicada após o filtro em `raw_items`, `signals`, `ideas`, e (F4A) em `evidences`.
+- RF-06. **Blacklist obrigatória** aplicada após o filtro em `raw_items`, `signals`, `ideas`, e (F4A) em `evidences` **e na promoção para `opportunity_cards`**. Qualquer categoria bloqueada/alto risco ou fora do perfil IndieLab (`not_indielab_fit`) deve derrubar `launchability_score` para zero/quase zero e impedir `opportunity_candidate`; saúde/médico/regulatório/desinformação é apenas um exemplo desse conjunto.
 - RF-07. Extração IA em JSON estruturado (P-EXT-001): `pain`, `desire`, `complaint`, `behavior`, `audience_hint`, `relevance_b2c`, `signal_strength`, `language`, `evidence_quote`.
 - RF-08. Clusterização legada por cosine ≥ 0.78 (threshold em `weights`).
 - RF-09. Geração legada de até 3 ideias por cluster (P-IDE-001) — **mantida** para dataset histórico, sem desligar em F4A.
@@ -213,7 +213,7 @@ flowchart TD
 - RF-26. **Need clusters.** Agrupamento por cosine sobre `evidences.embedding` filtrado por `pain_text != null` ou `evidence_type ∈ {repeated_pain, workaround_signal, alternative_request, pricing_complaint, process_manual_work, competitor_weakness}`.
 - RF-27. **Opportunity cards.** Toda opportunity tem 6 axes scores: `trend_score`, `pain_score`, `audience_score`, `source_confidence`, `launchability_score`, `opportunity_score`. Cálculos conforme `architecture/F4_OPPORTUNITY_MOTOR.md` §7.
 - RF-28. **Source Confidence cap.** Manual e watch **não** elevam `source_confidence` externa. `distinct_external == 1 ⇒ source_confidence ≤ 0.40`.
-- RF-29. **Gates explícitos.** State machine com estados `trend_only | watch | weak_signal | pain_candidate | opportunity_candidate | qualified_opportunity | approved_opportunity | rejected | snoozed`. Toda transição registra em `feedback`.
+- RF-29. **Gates explícitos.** State machine com estados `trend_only | watch | weak_signal | pain_candidate | opportunity_candidate | qualified_opportunity | approved_opportunity | rejected | snoozed`. Categoria bloqueada/alto risco deve ir para `rejected` com `reason_codes` do vocabulário atual (principalmente `not_indielab_fit`, `regulatory_risk`, `good_trend_bad_opportunity` ou `evidence_insufficient`, conforme o caso). Toda transição registra em `feedback` quando a tabela polimórfica existir (F4C); em F4A, `opportunity_cards.reason_codes` deve preservar o motivo automático e `blacklist_tags` deve carregar a categoria exata.
 - RF-30. **Idea só nasce de `approved_opportunity`** (P-IDE-002, F4C). Pipeline legado P-IDE-001 continua existindo para histórico.
 - RF-31. **Brief só nasce de `idea_allowed`** (P-BRF-002, F4C). Brief legado P-BRF-001 continua existindo para histórico.
 - RF-32. **Feedback estruturado.** `feedback` polimórfico (`target_kind, target_id`) com `reason_code` obrigatório (vocabulário fechado §20).
@@ -448,7 +448,7 @@ blacklist_terms(
 4. **/funil/trends** — listagem `trend_candidates`.
 5. **/funil/need-clusters** — listagem `need_clusters`.
 6. **/funil/opportunities** — ranking de `opportunity_cards` com filtros por `gate_state` + axes mínimos.
-7. **/funil/opportunities/[id]** — detalhe + axes + evidence trace + ações de gate (reason_code obrigatório em transições do operador a partir de F4C). **F4A (HN-only):** qualquer `qualified_opportunity` deve exibir estado/badge **Baixa confiança de fonte** (motor valida estrutura, não mercado amplo).
+7. **/funil/opportunities/[id]** — detalhe + axes + evidence trace + ações de gate (reason_code obrigatório em transições do operador a partir de F4C). **F4A (HN-only):** qualquer opportunity candidata/qualificada deve exibir estado/badge **Baixa confiança de fonte** (motor valida estrutura, não mercado amplo).
 8. **/funil/source-confidence** — auditoria fonte por opportunity.
 9. **/funil/ideas** — F4C: ideias derivadas de opportunities (`ideas.opportunity_id IS NOT NULL`).
 10. **/funil/briefs** — F4C: briefs derivados de `idea_allowed`.
@@ -645,7 +645,7 @@ Total estimado V2: F4A+B+C ~3-4 semanas; F5 incremental conforme demanda; F6 ao 
 - **F1**: ≥ 100 raw_items/execução HN **ou** ≥ 50 candidatos/execução; dedupe < 5%; custo IA = US$ 0. — DONE.
 - **F2**: ≥ 20 ideias/execução em JSON válido; threshold orçamento bloqueia em teste; `ai_usage_logs` populando. — DONE.
 - **F3**: 30 ideias revisadas em ≤ 30 min (KPI 30); aba Filtradas mostra motivos. — DONE.
-- **F4A**: smoke documentado com **≥ 10** `evidences` criadas a partir de **sinais novos** apenas (adapter **sem** backfill retroativo); ≥ 1 `opportunity_card` `qualified_opportunity`; **UI:** `qualified_opportunity` em HN-only exibe **Baixa confiança de fonte**; **source_confidence ≤ 0.40** em 100% das opportunities (HN-only); manual analysis E2E ok; F3 legado intacto.
+- **F4A**: validação **estrutural HN-only**, não validação de mercado. Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill) e adapta corretamente os elegíveis; se houver menos de 10 sinais novos, isso é **dados insuficientes**, não falha do motor. Fixture/dev seed pode validar lote ≥ 10 sem inventar dados reais. Gate mínimo: evidence válida → `need_cluster` → `opportunity_card`; `source_confidence ≤ 0.40` em 100% das opportunities HN-only; UI exibe **Baixa confiança de fonte** quando aplicável; motor **rejeita** oportunidade com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` e não a promove para `opportunity_candidate`; `test:opportunity-gate` encerra corretamente; manual analysis E2E ok dentro do escopo F4A; F3 legado intacto. **`qualified_opportunity` não é obrigatório em F4A.**
 - **F4B**: ≥ 1 opportunity_card com `source_confidence ≥ 0.65` (HN + GT); demonstração `trend_only` e `pain_candidate` corretos; custo Trends US$ 0.
 - **F4C**: idea só nasce com `opportunity_id NOT NULL` em rota nova; brief só nasce com `idea_allowed`; reason_code obrigatório validado; backfill `feedback` legado sem perda de dados.
 - **F5x** (cada fonte): ≥ 30 evidences/dia por 3 dias seguidos; ≥ 1 opportunity sobe `source_confidence` para próxima faixa; nenhuma alteração no motor.

@@ -16,7 +16,9 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "test:budget": "tsx scripts/test-budget.ts",
-    "test:budget:live": "tsx scripts/test-budget-live.ts"
+    "test:budget:live": "tsx scripts/test-budget-live.ts",
+    "test:opportunity-gate": "tsx scripts/test-opportunity-gate.ts",
+    "test:opportunity-blacklist": "tsx scripts/test-opportunity-blacklist.ts"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 import { costBudgets, prompts, weights } from "./schema";
+import { F4_WEIGHT_DEFAULTS } from "@/motor/f4-weights";
 import { PROMPT_DEFS } from "../prompts";
 import { env } from "@/lib/env";
 
@@ -101,6 +102,21 @@ async function main() {
       });
   }
   console.log(`[seed] weights upserted: ${defaultWeights.length}`);
+
+  const f4Weights = Object.entries(F4_WEIGHT_DEFAULTS).map(([name, value]) => ({
+    name,
+    value: String(value),
+  }));
+  for (const weight of f4Weights) {
+    await db
+      .insert(weights)
+      .values(weight)
+      .onConflictDoUpdate({
+        target: weights.name,
+        set: { value: weight.value, updatedAt: sql`now()` },
+      });
+  }
+  console.log(`[seed] f4 weights upserted: ${f4Weights.length}`);
 
   await client.end({ timeout: 5 });
 }

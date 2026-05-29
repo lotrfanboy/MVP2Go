@@ -107,7 +107,7 @@ Criar grupo de rotas em `src/app/(dashboard)/funil/`:
 | `/funil/trends` | Lista `trend_candidates` com filtros (window_kind, market). |
 | `/funil/need-clusters` | Lista `need_clusters` com `pain_summary`, `evidence_count`. |
 | `/funil/opportunities` | Ranking de `opportunity_cards` com filtros por `gate_state`, axes mínimos. |
-| `/funil/opportunities/[id]` | Detalhe + axes + evidence trace + ações de gate. **Obrigatório:** se `gate_state='qualified_opportunity'` em F4A (HN-only), exibir **Baixa confiança de fonte** (motor = validação estrutural, não mercado). |
+| `/funil/opportunities/[id]` | Detalhe + axes + evidence trace + ações de gate. **Obrigatório:** em F4A (HN-only), toda opportunity candidata/qualificada deve exibir **Baixa confiança de fonte** (motor = validação estrutural, não mercado). |
 | `/funil/source-confidence` | Auditoria fonte por opportunity. |
 
 - Atualizar `src/components/dashboard/nav-config.ts` para incluir novo grupo "Funil" **acima** de "Operação". Renomear "Operação" para "Operação (legado)" e adicionar badge `LEGADO` nos itens existentes (Dashboard, Ranking, Filtradas, Brief MVP, Sinais, Clusters).
@@ -145,11 +145,12 @@ Criar grupo de rotas em `src/app/(dashboard)/funil/`:
 
 - [ ] Migration `0004_*.sql` exibida em SQL; **aplicada em dev somente** após **aprovação explícita e específica** do operador (não há autorização genérica).
 - [ ] Tabelas novas respondem em SQL select (`SELECT COUNT(*) FROM evidences;` etc).
-- [ ] Adapter `signal-to-evidence` correto para **sinais novos** apenas: smoke ≥ **10** `evidences` em run de teste documentada (sem backfill de histórico).
+- [ ] Adapter `signal-to-evidence` correto para **sinais novos** apenas: adapta todos os sinais novos elegíveis no período (sem backfill de histórico). Se houver < 10 sinais novos, registrar **dados insuficientes** e validar lote ≥ 10 com fixture/dev seed controlado.
 - [ ] `trend-engine` produz ≥ 1 `trend_candidate` no window 7d.
 - [ ] `need-cluster` produz ≥ 1 `need_cluster`.
-- [ ] `opportunity-score` produz ≥ 1 `opportunity_card` com `gate_state='qualified_opportunity'`. **Source Confidence ≤ 0.40** (HN-only).
-- [ ] **UI:** toda `qualified_opportunity` em F4A exibe **Baixa confiança de fonte**.
+- [ ] `opportunity-score` produz ≥ 1 `opportunity_card` a partir de `need_cluster` válido. **`qualified_opportunity` não é obrigatório em F4A HN-only** (D-18). **Source Confidence ≤ 0.40** (HN-only).
+- [ ] **UI:** toda opportunity HN-only exibida como candidata/qualificada comunica **Baixa confiança de fonte**.
+- [ ] Motor rejeita `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` (saúde/médico/regulatório/desinformação sensível é só exemplo): `launchability_score` zero/quase zero, `gate_state='rejected'`, `reason_codes` preenchidos.
 - [ ] State machine valida transições (testes em `scripts/test-opportunity-gate.ts`).
 - [ ] `assertBudget()` bloqueia em teste (≥ 0.90 cron, ≥ 1.00 hard) no cap vigente.
 - [ ] `npm run typecheck` / `npm run lint` / `npm run build` passam.
@@ -203,7 +204,7 @@ Antes de tocar QUALQUER arquivo:
 - docs/architecture/F5_SOURCE_EXPANSION.md
 - docs/IMPLEMENTATION_PLAN.md (seção F4A)
 - docs/PROJECT_STATE.md
-- docs/DECISIONS.md (D-01..D-16, O-01..O-10)
+- docs/DECISIONS.md (D-01..D-18, O-01..O-10)
 - docs/AGENTS.md
 - docs/HANDOFF_TEMPLATE.md
 - docs/handback/F2_DONE.md, F3_DONE.md, F3_REVIEW.md, F3_QA_DONE.md, F3_QA_REVIEW_BY_AGENT5.md
@@ -242,7 +243,7 @@ Antes de tocar QUALQUER arquivo:
 - implemente endpoints /api/cron/build-evidence, /api/cron/score-opportunities, /api/manual/analyze;
 - atualize vercel.json (mantenha cron antigo intacto; adicione 2 novos);
 - crie 8 rotas /funil/* (radar, watch-topics, manual, trends, need-clusters, opportunities, opportunities/[id], source-confidence);
-- **UI:** toda qualified_opportunity em F4A exibe **Baixa confiança de fonte**;
+- **UI:** toda opportunity HN-only candidata/qualificada em F4A exibe **Baixa confiança de fonte**;
 - atualize nav-config: novo grupo "Funil" acima de "Operação"; marque telas legadas com badge LEGADO;
 - seedar pesos f4_* novos sem mexer em pesos legados;
 - não hardcodear cap mensal de IA no código — ENV + cost_budgets.
@@ -250,10 +251,11 @@ Antes de tocar QUALQUER arquivo:
 5) Validações obrigatórias antes do handback:
 - npm run typecheck / lint / build passam;
 - migration aplicada em dev só após aprovação explícita;
-- smoke: ≥ 10 evidences a partir de **sinais novos** apenas (sem backfill);
-- ≥ 1 opportunity_card com gate_state=qualified_opportunity;
-- UI: qualified com **Baixa confiança de fonte**;
+- smoke: adapter adapta todos os sinais novos elegíveis; se houver <10, documentar **dados insuficientes** e validar lote ≥10 por fixture/dev seed controlado (sem backfill);
+- ≥ 1 opportunity_card criada a partir de need_cluster válido; **não exigir qualified_opportunity em F4A HN-only**;
+- UI: opportunity HN-only candidata/qualificada com **Baixa confiança de fonte**;
 - source_confidence ≤ 0.40 em 100% das opportunities (HN-only);
+- opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` não vira opportunity_candidate; deve ser rejected com reason_codes;
 - manual analysis end-to-end ok;
 - F3 legado intacto, sem regressão visível;
 - assertBudget testado no cap vigente;

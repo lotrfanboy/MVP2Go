@@ -482,6 +482,7 @@ opportunity_score = clamp01(
 stateDiagram-v2
     [*] --> opportunity_candidate
 
+    opportunity_candidate --> rejected: launchability_score <= 0.05 ou categoria bloqueada
     opportunity_candidate --> trend_only: pain_score < 0.20 e trend_score >= 0.50
     opportunity_candidate --> weak_signal: opportunity_score < 0.30
     opportunity_candidate --> pain_candidate: pain_score >= 0.40 e audience_score < 0.30
@@ -512,8 +513,9 @@ stateDiagram-v2
 - **Idea só nasce de `approved_opportunity`.** Nenhuma rota chama `runIdeaGeneration` em opportunity que não esteja `approved_opportunity`.
 - **Brief só nasce de `idea_allowed`.** Ideia precisa ser aprovada pelo operador (`gate_state='idea_allowed'`) antes do brief.
 - **`source_confidence < 0.40` não satisfaz o gate mínimo para `qualified_opportunity`** (ver pesos `f4_gate_*`). Oportunidades abaixo disso podem permanecer em `opportunity_candidate` ou estados inferiores, sempre com comunicação honesta de confiança.
-- **F4A (HN-only):** toda oportunidade em `qualified_opportunity` deve exibir na UI **Baixa confiança de fonte** (badge ou estado dedicado em PT-BR). **`source_confidence` no teto (ex.: 0,40 com uma fonte externa) valida encruzilhada técnica do motor, não prova de mercado amplo.**
-- **`launchability_score = 0`** (categoria bloqueada) força `gate_state='rejected'` automático com `reason_code='not_indielab_fit'` ou `'regulatory_risk'`.
+- **F4A (HN-only):** `qualified_opportunity` **não é gate obrigatório**. F4A valida a estrutura do motor (evidence → need_cluster → opportunity_card), não mercado amplo. Toda opportunity HN-only exibida como candidata ou qualificada deve comunicar **Baixa confiança de fonte** (badge/estado em PT-BR).
+- **`launchability_score = 0` ou quase zero** (categoria bloqueada/alto risco, `blacklist_tags` ou `not_indielab_fit`) força `gate_state='rejected'` automático com reason code do vocabulário atual (`not_indielab_fit`, `regulatory_risk`, `good_trend_bad_opportunity` ou `evidence_insufficient`, conforme o caso) e `blacklist_tags` preservando a categoria exata.
+- **Blacklist/domain-risk é a regra, não saúde em si.** Saúde/médico/regulatório/desinformação sensível é só o exemplo observado no smoke; qualquer lixo, categoria bloqueada ou coisa fora do modelo IndieLab nunca pode ser promovida automaticamente para `opportunity_candidate`, mesmo com dor real e tendência.
 
 ---
 
@@ -644,19 +646,20 @@ Entrega:
   - **/funil/trends** — listagem trend_candidates.
   - **/funil/need-clusters** — listagem need_clusters.
   - **/funil/opportunities** — ranking de opportunity_cards.
-  - **/funil/opportunities/[id]** — detalhe + axes + evidence trace + ações de gate. **F4A:** `qualified_opportunity` sempre com **Baixa confiança de fonte** visível.
+  - **/funil/opportunities/[id]** — detalhe + axes + evidence trace + ações de gate. **F4A:** opportunity HN-only candidata/qualificada sempre com **Baixa confiança de fonte** visível.
   - **/funil/source-confidence** — auditoria fonte por opportunity.
 - F3 antiga continua acessível, marcada como `LEGADO` na sidebar.
 
 Gates F4A:
 
-- [ ] Adapter produz `evidences` **apenas para `signals` novos** (sem backfill retroativo). Smoke: amostra ≥ **10** evidences em run de teste documentada.
-- [ ] ≥ 1 opportunity_card com `gate_state='qualified_opportunity'` em dataset de teste (mesmo com HN-only).
-- [ ] **UI:** toda `qualified_opportunity` em F4A exibe **Baixa confiança de fonte**.
+- [ ] Adapter produz `evidences` **apenas para `signals` novos** (sem backfill retroativo). Se houver menos de 10 sinais novos elegíveis pós-cutoff, isso é **dados insuficientes**, não falha; validar lote ≥ 10 por fixture/dev seed controlado quando necessário.
+- [ ] ≥ 1 `opportunity_card` criada a partir de `need_cluster` válido. **`qualified_opportunity` não é obrigatório em F4A HN-only.**
+- [ ] **UI:** toda opportunity HN-only exibida como candidata/qualificada comunica **Baixa confiança de fonte**.
 - [ ] Source Confidence ≤ 0.40 nesta fase para evidência externa única (assertion HN-only).
 - [ ] `assertBudget()` bloqueia em teste (≥ 0.90 cron, ≥ 1.00 hard) no **cap vigente** configurado.
 - [ ] Telas funil sobem todas com loading/empty/error.
 - [ ] Manual analysis on-demand funciona end-to-end (input → evidence → opportunity stub).
+- [ ] Motor rejeita categoria bloqueada/alto risco, `blacklist_tags` ou `not_indielab_fit` (`launchability_score` zero/quase zero; `gate_state='rejected'`; `reason_codes` preenchidos). Saúde/médico/regulatório/desinformação sensível é exemplo, não regra especial.
 
 Saída F4A: `docs/handback/F4A_DONE.md` + revisão Agent 5.
 
@@ -719,7 +722,7 @@ Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somen
 | **Funil** | Trends | F4A → F4B | `trend_candidates` |
 | **Funil** | Pain/Need Clusters | F4A | `need_clusters` |
 | **Funil** | Opportunities | F4A | `opportunity_cards` |
-| **Funil** | Opportunity Detail | F4A | `opportunity_cards` + `opportunity_evidences`; **badge Baixa confiança de fonte** em `qualified_opportunity` (HN-only) |
+| **Funil** | Opportunity Detail | F4A | `opportunity_cards` + `opportunity_evidences`; **badge Baixa confiança de fonte** em opportunity HN-only candidata/qualificada |
 | **Funil** | Source Confidence / Evidence Trace | F4A | derivado de `evidences` por opportunity |
 | **Funil** | Ideas (do funil) | F4C | `ideas` com `opportunity_id NOT NULL` |
 | **Funil** | Briefs (do funil) | F4C | `briefs` derivados de `idea_allowed` |

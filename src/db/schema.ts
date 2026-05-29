@@ -8,6 +8,7 @@ import {
   jsonb,
   numeric,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -245,6 +246,10 @@ export const ideas = pgTable(
     clusterId: uuid("cluster_id")
       .notNull()
       .references(() => clusters.id, { onDelete: "cascade" }),
+    /** F4A: set when idea is generated from an opportunity (F4C). */
+    opportunityId: uuid("opportunity_id"),
+    /** F4: idea funnel gate; legacy ideas keep default. */
+    gateState: text("gate_state").notNull().default("idea_candidate"),
     language: text("language").notNull().default("other"),
     name: text("name").notNull(),
     pain: text("pain").notNull(),
@@ -275,6 +280,7 @@ export const ideas = pgTable(
     index("ideas_is_filtered_out_idx").on(t.isFilteredOut),
     index("ideas_blacklist_tags_gin_idx").using("gin", t.blacklistTags),
     index("ideas_cluster_id_idx").on(t.clusterId),
+    index("ideas_opportunity_id_idx").on(t.opportunityId),
   ],
 );
 
@@ -365,6 +371,209 @@ export const feedback = pgTable(
   (t) => [index("feedback_idea_id_created_at_idx").on(t.ideaId, sql`${t.createdAt} DESC`)],
 );
 
+// --- F4A opportunity motor ------------------------------------------------
+
+export const motorRuntimeState = pgTable("motor_runtime_state", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const watchTopics = pgTable(
+  "watch_topics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    topicKey: text("topic_key").notNull(),
+    topicLabel: text("topic_label").notNull(),
+    language: text("language").notNull().default("all"),
+    market: text("market").notNull().default("global"),
+    status: text("status").notNull().default("active"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("watch_topics_topic_key_unique_idx").on(t.topicKey)],
+);
+
+export const manualInputs = pgTable(
+  "manual_inputs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    inputKind: text("input_kind").notNull(),
+    payload: text("payload").notNull(),
+    sourceUrl: text("source_url"),
+    language: text("language").notNull().default("other"),
+    watchTopicId: uuid("watch_topic_id").references(() => watchTopics.id, { onDelete: "set null" }),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("manual_inputs_created_at_idx").on(sql`${t.createdAt} DESC`)],
+);
+
+export const needClusters = pgTable(
+  "need_clusters",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    label: text("label"),
+    summary: text("summary"),
+    painSummary: text("pain_summary"),
+    audienceSummary: text("audience_summary"),
+    topicKey: text("topic_key"),
+    topicTags: text("topic_tags").array().notNull().default(sql`'{}'::text[]`),
+    evidenceCount: integer("evidence_count").notNull().default(0),
+    coherenceScore: numeric("coherence_score", { precision: 4, scale: 3 }),
+    status: text("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("need_clusters_created_at_idx").on(sql`${t.createdAt} DESC`)],
+);
+
+export const trendCandidates = pgTable(
+  "trend_candidates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    topicKey: text("topic_key").notNull(),
+    topicLabel: text("topic_label").notNull(),
+    market: text("market").notNull().default("global"),
+    language: text("language").notNull().default("other"),
+    windowKind: text("window_kind").notNull(),
+    trendScore: numeric("trend_score", { precision: 4, scale: 3 }).notNull().default("0"),
+    recency: numeric("recency", { precision: 4, scale: 3 }).notNull().default("0"),
+    frequency: numeric("frequency", { precision: 4, scale: 3 }).notNull().default("0"),
+    acceleration: numeric("acceleration", { precision: 4, scale: 3 }).notNull().default("0"),
+    persistence: numeric("persistence", { precision: 4, scale: 3 }).notNull().default("0"),
+    sourceDiversity: numeric("source_diversity", { precision: 4, scale: 3 }).notNull().default("0"),
+    evidenceCount: integer("evidence_count").notNull().default(0),
+    computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("trend_candidates_topic_window_market_unique_idx").on(
+      t.topicKey,
+      t.windowKind,
+      t.market,
+    ),
+    index("trend_candidates_window_idx").on(t.windowKind),
+    index("trend_candidates_topic_key_idx").on(t.topicKey),
+  ],
+);
+
+export const evidences = pgTable(
+  "evidences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sourceKey: text("source_key").notNull(),
+    sourceItemId: text("source_item_id"),
+    sourceRef: text("source_ref"),
+    evidenceType: text("evidence_type").notNull(),
+    topicKey: text("topic_key"),
+    topicLabel: text("topic_label"),
+    observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+    language: text("language").notNull().default("other"),
+    market: text("market").notNull().default("global"),
+    summary: text("summary"),
+    painText: text("pain_text"),
+    desireText: text("desire_text"),
+    audienceHint: text("audience_hint"),
+    quoteExcerpt: text("quote_excerpt"),
+    strength: numeric("strength", { precision: 4, scale: 3 }).notNull().default("0"),
+    confidence: numeric("confidence", { precision: 4, scale: 3 }).notNull().default("0"),
+    axesJson: jsonb("axes_json").notNull().default(sql`'{}'::jsonb`),
+    metricsJson: jsonb("metrics_json").notNull().default(sql`'{}'::jsonb`),
+    metadataJson: jsonb("metadata_json").notNull().default(sql`'{}'::jsonb`),
+    rawItemId: uuid("raw_item_id").references(() => rawItems.id, { onDelete: "set null" }),
+    signalId: uuid("signal_id").references(() => signals.id, { onDelete: "set null" }),
+    manualInputId: uuid("manual_input_id").references(() => manualInputs.id, { onDelete: "set null" }),
+    watchTopicId: uuid("watch_topic_id").references(() => watchTopics.id, { onDelete: "set null" }),
+    embedding: vector1536("embedding"),
+    blacklistTags: text("blacklist_tags").array().notNull().default(sql`'{}'::text[]`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("evidences_topic_key_idx").on(t.topicKey),
+    index("evidences_evidence_type_idx").on(t.evidenceType),
+    index("evidences_observed_at_idx").on(sql`${t.observedAt} DESC`),
+    index("evidences_blacklist_tags_gin_idx").using("gin", t.blacklistTags),
+    uniqueIndex("evidences_source_dedupe_idx").on(
+      t.sourceKey,
+      sql`coalesce(${t.sourceItemId}, '')`,
+      t.evidenceType,
+    ),
+  ],
+);
+
+export const evidenceClusters = pgTable(
+  "evidence_clusters",
+  {
+    evidenceId: uuid("evidence_id")
+      .notNull()
+      .references(() => evidences.id, { onDelete: "cascade" }),
+    needClusterId: uuid("need_cluster_id")
+      .notNull()
+      .references(() => needClusters.id, { onDelete: "cascade" }),
+    distance: numeric("distance", { precision: 8, scale: 6 }),
+    primaryEvidence: boolean("primary_evidence").notNull().default(false),
+  },
+  (t) => [
+    primaryKey({ columns: [t.evidenceId, t.needClusterId] }),
+    index("evidence_clusters_need_cluster_id_idx").on(t.needClusterId),
+  ],
+);
+
+export const opportunityCards = pgTable(
+  "opportunity_cards",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    needClusterId: uuid("need_cluster_id").references(() => needClusters.id, { onDelete: "set null" }),
+    trendCandidateId: uuid("trend_candidate_id").references(() => trendCandidates.id, {
+      onDelete: "set null",
+    }),
+    topicKey: text("topic_key"),
+    topicLabel: text("topic_label").notNull(),
+    painSummary: text("pain_summary"),
+    audienceSummary: text("audience_summary"),
+    market: text("market").notNull().default("global"),
+    language: text("language").notNull().default("other"),
+    trendScore: numeric("trend_score", { precision: 4, scale: 3 }).notNull().default("0"),
+    painScore: numeric("pain_score", { precision: 4, scale: 3 }).notNull().default("0"),
+    audienceScore: numeric("audience_score", { precision: 4, scale: 3 }).notNull().default("0"),
+    sourceConfidence: numeric("source_confidence", { precision: 4, scale: 3 }).notNull().default("0"),
+    launchabilityScore: numeric("launchability_score", { precision: 4, scale: 3 }).notNull().default("0"),
+    opportunityScore: numeric("opportunity_score", { precision: 4, scale: 3 }).notNull().default("0"),
+    axesJson: jsonb("axes_json").notNull().default(sql`'{}'::jsonb`),
+    evidenceCount: integer("evidence_count").notNull().default(0),
+    sourceCount: integer("source_count").notNull().default(0),
+    gateState: text("gate_state").notNull().default("opportunity_candidate"),
+    snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
+    reasonCodes: text("reason_codes").array().notNull().default(sql`'{}'::text[]`),
+    notes: text("notes"),
+    blacklistTags: text("blacklist_tags").array().notNull().default(sql`'{}'::text[]`),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("opportunity_cards_opportunity_score_idx").on(sql`${t.opportunityScore} DESC`),
+    index("opportunity_cards_gate_state_idx").on(t.gateState),
+  ],
+);
+
+export const opportunityEvidences = pgTable(
+  "opportunity_evidences",
+  {
+    opportunityId: uuid("opportunity_id")
+      .notNull()
+      .references(() => opportunityCards.id, { onDelete: "cascade" }),
+    evidenceId: uuid("evidence_id")
+      .notNull()
+      .references(() => evidences.id, { onDelete: "cascade" }),
+    contributionJson: jsonb("contribution_json").notNull().default(sql`'{}'::jsonb`),
+  },
+  (t) => [
+    primaryKey({ columns: [t.opportunityId, t.evidenceId] }),
+    index("opportunity_evidences_evidence_id_idx").on(t.evidenceId),
+  ],
+);
+
 export type Run = typeof runs.$inferSelect;
 export type NewRun = typeof runs.$inferInsert;
 export type AiUsageLog = typeof aiUsageLogs.$inferSelect;
@@ -395,3 +604,19 @@ export type Weight = typeof weights.$inferSelect;
 export type NewWeight = typeof weights.$inferInsert;
 export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
+
+export type MotorRuntimeState = typeof motorRuntimeState.$inferSelect;
+export type WatchTopic = typeof watchTopics.$inferSelect;
+export type NewWatchTopic = typeof watchTopics.$inferInsert;
+export type ManualInput = typeof manualInputs.$inferSelect;
+export type NewManualInput = typeof manualInputs.$inferInsert;
+export type NeedCluster = typeof needClusters.$inferSelect;
+export type NewNeedCluster = typeof needClusters.$inferInsert;
+export type TrendCandidate = typeof trendCandidates.$inferSelect;
+export type NewTrendCandidate = typeof trendCandidates.$inferInsert;
+export type Evidence = typeof evidences.$inferSelect;
+export type NewEvidence = typeof evidences.$inferInsert;
+export type EvidenceCluster = typeof evidenceClusters.$inferSelect;
+export type OpportunityCard = typeof opportunityCards.$inferSelect;
+export type NewOpportunityCard = typeof opportunityCards.$inferInsert;
+export type OpportunityEvidence = typeof opportunityEvidences.$inferSelect;

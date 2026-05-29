@@ -199,7 +199,31 @@
   - Commit/push/PR sem aprovação.
 - **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), [`architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md), Implementation Plan (F4A), Decisions D-01..D-17, Cursor Rules, handbacks F2/F3.
 - **Expected handback:** `docs/handback/F4A_DONE.md`.
-- **Status atual:** READY TO START (aguardando aprovação do operador).
+- **Status atual:** DONE, mas review Agent 5 ficou `rejected`; correção segue com Agent 8.5.
+
+---
+
+## Agent 8.5 — F4A Fix (Gate, Blacklist, Launchability)
+
+- **Brief:** [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md).
+- **Responsabilidade:** correção pontual da F4A entregue pelo Agent 8 antes de liberar F4B, seguindo D-18.
+- **Allowed scope:**
+  - Corrigir `src/motor/*` para propagar `blacklist_tags`, derrubar `launchability_score` e rejeitar categoria bloqueada/alto risco/`not_indielab_fit`.
+  - Ajustar `src/sources/*` somente se necessário para preservar blacklist/tags em `evidences`.
+  - Corrigir/ampliar `scripts/test-opportunity-gate.ts` para encerrar sozinho e cobrir gates mínimos.
+  - Ajustar UI `/funil/*` somente se necessário para baixa confiança ou estado `rejected`.
+  - Criar `docs/handback/F4A_FIX_DONE.md`.
+- **Forbidden scope:**
+  - Iniciar F4B ou adicionar Google Trends.
+  - Adicionar Product Hunt, Reddit, YouTube ou Reviews.
+  - Alterar migration existente ou criar nova migration sem SQL preview + aprovação específica.
+  - Fazer backfill retroativo.
+  - Desligar pipeline F2 legado.
+  - Tocar `.env*`, secrets, MCP.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD, F4 architecture, Implementation Plan, Decisions D-18, Project State, F4A_DONE, F4A_REVIEW, Agent 0 reassessment, Agent 8 brief.
+- **Expected handback:** `docs/handback/F4A_FIX_DONE.md`.
+- **Status atual:** READY TO START (próximo agente). F4B bloqueada até nova review Agent 5.
 
 ---
 

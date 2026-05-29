@@ -112,6 +112,12 @@
 - **Decisão:** Ordem F5: **PH > Reddit > YouTube > Reviews**. RSS/Apple/Stack Exchange ficam como **backup** sem prioridade, implementados só sob demanda concreta. Ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md).
 - **Implicação:** PRD §8 atualizado. Cada fonte F5x entra como sprint dedicado sob aprovação caso a caso (mantém DP-08 spirit).
 
+### D-18 — Gate oficial F4A é estrutural, não `qualified_opportunity`
+- **Status:** Fechada (2026-05-28, decisão operador após F4A review).
+- **Contexto:** F4A é HN-only e, por D-14, `source_confidence` fica limitada a `0.40`. A review rejeitou F4A por não haver `qualified_opportunity` e por haver menos de 10 evidences HN novas, mas isso mistura validação estrutural com validação cross-source.
+- **Decisão:** F4A **não exige** `qualified_opportunity` nem volume real mínimo absoluto de 10 evidences pós-cutoff. F4A valida: adapter sem backfill; evidence válida; `need_cluster`; `opportunity_card`; cap HN-only; UI de baixa confiança; rejeição de categoria bloqueada/alto risco; testes encerrando corretamente; F3 legado intacto.
+- **Implicação:** `qualified_opportunity` forte e volume externo consistente passam a ser evidências de F4B/F5, não condição para aprovar F4A. Se houver menos de 10 sinais novos elegíveis, o handback deve registrar **dados insuficientes** e validar lote por fixture/dev seed controlado. Opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` deve ser `rejected` com `reason_codes`, nunca `opportunity_candidate`; saúde/médico/regulatório/desinformação sensível é apenas exemplo.
+
 ---
 
 ## Princípios operacionais permanentes (PRD Apêndice E + Implementation Plan)
@@ -138,6 +144,7 @@
 - **DP-18** **Idea só de `approved_opportunity`. Brief só de `idea_allowed`** (D-11/D-15). Aplicado em rotas novas (`/api/funil/*`); legado mantido sem desligar.
 - **DP-19** **Sistema deve poder dizer "não há oportunidade aqui"** (`gate_state='trend_only'` é resposta válida, não falha).
 - **DP-20** **Reason code obrigatório** em transições de `gate_state` em opportunities/ideas (D-15).
+- **DP-21** **F4A é gate estrutural HN-only** (D-18): não exigir `qualified_opportunity`; não falsear volume; bloquear/rejeitar categorias incompatíveis com IndieLab antes de promover `opportunity_candidate`.
 
 ---
 

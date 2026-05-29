@@ -7,7 +7,7 @@
 
 ## Estado atual em uma linha
 
-**F3 fechada e aprovada (com QA estruturado).** Agent 0 entregou nesta rodada o **redesign F4/F5** (PRD rodada 7 + arquitetura `F4_OPPORTUNITY_MOTOR.md` + `F5_SOURCE_EXPANSION.md` + briefs Agent 8/9/10 + decisões D-11..D-17). Aguardando **validação do operador** e autorização para commit + ativação do Agent 8.
+**F3 fechada e aprovada. F4A foi implementada, mas a review Agent 5 ficou `rejected`.** Agent 0 reavaliou o gate e registrou **D-18**: F4A é validação estrutural HN-only, sem exigir `qualified_opportunity`; antes de F4B, Agent 8.5 deve corrigir blacklist/launchability/gate/teste.
 
 ---
 
@@ -47,24 +47,23 @@ Documentos entregues nesta rodada:
 
 ---
 
-## Step 13 — F4A com Agent 8 (depois da autorização)
+## Step 13 — F4A correção com Agent 8.5 (atual)
 
-Owner: Agent 8.
-Tempo estimado: 5–7 dias.
+Owner: Agent 8.5.
+Tempo estimado: correção curta focada.
 
-Sequência interna (Agent 8 deve seguir):
+Sequência interna (Agent 8.5 deve seguir):
 
-1. Leitura obrigatória dos docs listados em [`AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §0.
-2. Approval first com operador: lista de arquivos, **SQL preview completo** da migration F4A (`0004_*.sql` ou próximo prefixo), pacotes, custo estimado vs **cap vigente** (ENV/`cost_budgets`).
-3. Aplicar migration **somente** após **aprovação explícita e específica** daquele SQL (**sem** autorização genérica de migration — Q-G).
-4. Implementar `src/sources/`, `src/motor/`, prompts novos, endpoints novos, UI Funil mínima (8 rotas). Adapter `signals → evidences`: **só sinais novos** (Q-H). UI: `qualified_opportunity` HN-only exibe **Baixa confiança de fonte**.
-5. Validar gates F4A (ver [`AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §4).
-6. Entregar `docs/handback/F4A_DONE.md`.
-7. Acionar Agent 5 para review.
+1. Ler [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md), [`docs/handback/AGENT_0_F4A_REASSESSMENT.md`](handback/AGENT_0_F4A_REASSESSMENT.md), [`F4A_DONE.md`](handback/F4A_DONE.md), [`F4A_REVIEW.md`](handback/F4A_REVIEW.md) e docs canônicos.
+2. Corrigir somente F4A: `test:opportunity-gate` encerra; state machine cobre bloqueados; `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` viram `rejected` com `reason_codes`; launchability impede `opportunity_candidate`.
+3. Não exigir `qualified_opportunity` nem `>=10` evidences reais quando não houver sinais novos suficientes; validar adapter com sinais elegíveis e fixture/dev seed controlado se necessário.
+4. Manter `source_confidence <= 0.40` e UI de **Baixa confiança de fonte** em HN-only.
+5. Entregar `docs/handback/F4A_FIX_DONE.md`.
+6. Acionar Agent 5 para nova review contra D-18.
 
 ---
 
-## Step 14 — F4B com Agent 9 (após F4A approved)
+## Step 14 — F4B com Agent 9 (bloqueado até F4A approved)
 
 Owner: Agent 9. Tempo: 4–6 dias. Brief: [`AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
 

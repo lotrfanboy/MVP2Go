@@ -2,6 +2,8 @@ export type NavItemConfig = {
   label: string;
   href: string;
   icon: string;
+  /** Marca rotas do fluxo legado (F2/F3) conforme F4A. */
+  legacy?: boolean;
 };
 
 export type NavGroupConfig = {
@@ -11,19 +13,31 @@ export type NavGroupConfig = {
 
 export const NAV_GROUPS: NavGroupConfig[] = [
   {
-    label: "Operação",
+    label: "Funil",
     items: [
-      { label: "Dashboard", href: "/dashboard", icon: "D" },
-      { label: "Ranking", href: "/ranking", icon: "R" },
-      { label: "Filtradas", href: "/filtradas", icon: "F" },
-      { label: "Brief MVP", href: "/brief/latest", icon: "B" },
+      { label: "Radar", href: "/funil/radar", icon: "◎" },
+      { label: "Watch topics", href: "/funil/watch-topics", icon: "W" },
+      { label: "Manual", href: "/funil/manual", icon: "M" },
+      { label: "Tendências", href: "/funil/trends", icon: "T" },
+      { label: "Need clusters", href: "/funil/need-clusters", icon: "N" },
+      { label: "Oportunidades", href: "/funil/opportunities", icon: "O" },
+      { label: "Fonte/confiança", href: "/funil/source-confidence", icon: "S" },
     ],
   },
   {
-    label: "Pipeline",
+    label: "Operação (legado)",
     items: [
-      { label: "Sinais", href: "/sinais", icon: "S" },
-      { label: "Clusters", href: "/clusters", icon: "C" },
+      { label: "Dashboard", href: "/dashboard", icon: "D", legacy: true },
+      { label: "Ranking", href: "/ranking", icon: "R", legacy: true },
+      { label: "Filtradas", href: "/filtradas", icon: "F", legacy: true },
+      { label: "Brief MVP", href: "/brief/latest", icon: "B", legacy: true },
+    ],
+  },
+  {
+    label: "Pipeline (legado)",
+    items: [
+      { label: "Sinais", href: "/sinais", icon: "S", legacy: true },
+      { label: "Clusters", href: "/clusters", icon: "C", legacy: true },
       { label: "Execuções", href: "/runs", icon: "E" },
     ],
   },
