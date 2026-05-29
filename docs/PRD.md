@@ -1,7 +1,7 @@
 # GoMVP V1 — PRD
 
 > **Versão:** 1.1 (rodada 7).
-> **Status:** decisões D-01 a D-16 fechadas. F0/F1/F2/F3 entregues e revisadas. Próximo gate: F4A (sob aprovação).
+> **Status:** decisões D-01 a D-18 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A aprovada com minors. Próximo gate: F4B (Google Trends / Agent 9).**
 > **Owner:** Built2Go (operador único).
 > **Última revisão:** rodada 7 + ajuste 2026-05-09 (cap IA D-16 = alvo operacional F4/F5 configurável por ENV/banco; sem backfill F4A; badge baixa confiança em qualified HN-only).
 
@@ -603,7 +603,7 @@ flowchart LR
     F5D --> F6["F6 Hardening (kill switch, alertas, retenção, RUNBOOK)"]
 ```
 
-**Status:** F0/F1/F2/F3 entregues e aprovadas. Próximo gate: F4A.
+**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A entregue e aprovada com minors. Próximo gate: F4B / Agent 9.
 
 - **F0 Fundação (1–2 dias)**: repo, Next.js 15, Supabase + pgvector, Drizzle, Auth, `runs`/`ai_usage_logs`/`cost_budgets`, `AIProvider`+`OpenAIProvider`, `assertBudget`, deploy mínimo. **Vercel Cron configurado vazio**.
 - **F1 Coleta + Storage (3–5 dias) — sem IA, sem embeddings, sem custo IA. Entrega visual: "Coleta / Raw Items / Candidatos" (não há `signals` ainda)**:
@@ -631,7 +631,7 @@ flowchart LR
   - Testes manuais dos thresholds 0.80/0.90/1.00.
   - **Coletores adicionais** (Product Hunt, RSS, Apple RSS, Stack Exchange, manual) **entram um por vez sob aprovação**, depois que HN estiver estável de ponta-a-ponta. Não implementar todos de uma vez.
 - **F3 Painel + Ações (3–4 dias)** — DONE.
-- **F4A Motor Base / Evidence Layer (5–7 dias)** — Owner: Agent 8 ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md)). Motor source-agnostic + adapter `signals → evidences` + tabelas novas + scoring multi-axis + state machine + UI Funil mínima. HN-only. Source Confidence ≤ 0.40 por design.
+- **F4A Motor Base / Evidence Layer (5–7 dias)** — DONE (`approved_with_minors`). Owner: Agent 8 + Agent 8.5 fix ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md)). Motor source-agnostic + adapter `signals → evidences` + tabelas novas + scoring multi-axis + state machine + UI Funil mínima. HN-only. Source Confidence ≤ 0.40 por design.
 - **F4B Cross-source com Google Trends (4–6 dias)** — Owner: Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). Trends como segunda fonte mínima. `search_momentum`. Source Confidence pode subir para ≥ 0.65.
 - **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 10 ([`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md)). Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
 - **F5A..F5D Source Expansion (incremental)** — ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Ordem: PH > Reddit > YouTube > Reviews. Cada fonte um sprint (~3-8 dias) sob aprovação caso a caso.
@@ -645,7 +645,7 @@ Total estimado V2: F4A+B+C ~3-4 semanas; F5 incremental conforme demanda; F6 ao 
 - **F1**: ≥ 100 raw_items/execução HN **ou** ≥ 50 candidatos/execução; dedupe < 5%; custo IA = US$ 0. — DONE.
 - **F2**: ≥ 20 ideias/execução em JSON válido; threshold orçamento bloqueia em teste; `ai_usage_logs` populando. — DONE.
 - **F3**: 30 ideias revisadas em ≤ 30 min (KPI 30); aba Filtradas mostra motivos. — DONE.
-- **F4A**: validação **estrutural HN-only**, não validação de mercado. Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill) e adapta corretamente os elegíveis; se houver menos de 10 sinais novos, isso é **dados insuficientes**, não falha do motor. Fixture/dev seed pode validar lote ≥ 10 sem inventar dados reais. Gate mínimo: evidence válida → `need_cluster` → `opportunity_card`; `source_confidence ≤ 0.40` em 100% das opportunities HN-only; UI exibe **Baixa confiança de fonte** quando aplicável; motor **rejeita** oportunidade com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` e não a promove para `opportunity_candidate`; `test:opportunity-gate` encerra corretamente; manual analysis E2E ok dentro do escopo F4A; F3 legado intacto. **`qualified_opportunity` não é obrigatório em F4A.**
+- **F4A**: DONE (`approved_with_minors`). Validação **estrutural HN-only**, não validação de mercado. Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill) e adapta corretamente os elegíveis; se houver menos de 10 sinais novos, isso é **dados insuficientes**, não falha do motor. Fixture/dev seed valida lote sem inventar dados reais. Gate mínimo validado: evidence válida → `need_cluster` → `opportunity_card`; `source_confidence ≤ 0.40` em 100% das opportunities HN-only; UI exibe **Baixa confiança de fonte** quando aplicável; motor **rejeita** opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` e não a promove para `opportunity_candidate`; `test:opportunity-gate` e `test:opportunity-blacklist` encerram corretamente; manual analysis E2E ok dentro do escopo F4A; F3 legado intacto. **`qualified_opportunity` não é obrigatório em F4A.**
 - **F4B**: ≥ 1 opportunity_card com `source_confidence ≥ 0.65` (HN + GT); demonstração `trend_only` e `pain_candidate` corretos; custo Trends US$ 0.
 - **F4C**: idea só nasce com `opportunity_id NOT NULL` em rota nova; brief só nasce com `idea_allowed`; reason_code obrigatório validado; backfill `feedback` legado sem perda de dados.
 - **F5x** (cada fonte): ≥ 30 evidences/dia por 3 dias seguidos; ≥ 1 opportunity sobe `source_confidence` para próxima faixa; nenhuma alteração no motor.

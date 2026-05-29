@@ -7,7 +7,7 @@
 
 ## Estado atual em uma linha
 
-**F3 fechada e aprovada. F4A foi implementada, mas a review Agent 5 ficou `rejected`.** Agent 0 reavaliou o gate e registrou **D-18**: F4A é validação estrutural HN-only, sem exigir `qualified_opportunity`; antes de F4B, Agent 8.5 deve corrigir blacklist/launchability/gate/teste.
+**F4A aprovada com minors.** O Opportunity Motor HN-only está entregue e corrigido (D-18). Próximo passo: **Agent 9 / F4B** para Google Trends como segunda fonte mínima e validação de cross-source confidence.
 
 ---
 
@@ -20,7 +20,7 @@
 
 ---
 
-## Step 12 (atual) — Validação do redesign F4/F5 (rodada 7 do PRD)
+## Step 12 — Validação do redesign F4/F5 (fechado)
 
 Documentos entregues nesta rodada:
 
@@ -39,33 +39,40 @@ Documentos entregues nesta rodada:
 | [`docs/AGENTS.md`](AGENTS.md) | ATUALIZADO (Agent 8/9/10 adicionados; Agent 0 ganha permissão escrita em PRD/architecture sob autorização explícita) |
 | [`.cursor/rules/gomvp-product-rules.mdc`](../.cursor/rules/gomvp-product-rules.mdc) | ATUALIZADO (princípios opportunity-first; nova ordem F5; D-16 cap configurável + alvo típico US$ 5 na validação F4/F5; manual/watch não elevam source confidence) |
 
-### Ação do operador
+### Status
 
-1. **Ler/aprovar** os documentos novos e alterados (recomendação: começar por `F4_OPPORTUNITY_MOTOR.md` — peça central; depois PRD §1/§9/§19/§24; depois `AGENT_8_F4A_MOTOR.md`).
-2. **Aprovar commit + push** da rodada 7 em `main` (mensagem sugerida: `docs(f4-redesign): introduce opportunity motor (rodada 7 do PRD, D-11..D-17)`).
-3. **Autorizar ativação do Agent 8** em chat dedicado, usando o prompt copy-paste de [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) §7.
-
----
-
-## Step 13 — F4A correção com Agent 8.5 (atual)
-
-Owner: Agent 8.5.
-Tempo estimado: correção curta focada.
-
-Sequência interna (Agent 8.5 deve seguir):
-
-1. Ler [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md), [`docs/handback/AGENT_0_F4A_REASSESSMENT.md`](handback/AGENT_0_F4A_REASSESSMENT.md), [`F4A_DONE.md`](handback/F4A_DONE.md), [`F4A_REVIEW.md`](handback/F4A_REVIEW.md) e docs canônicos.
-2. Corrigir somente F4A: `test:opportunity-gate` encerra; state machine cobre bloqueados; `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` viram `rejected` com `reason_codes`; launchability impede `opportunity_candidate`.
-3. Não exigir `qualified_opportunity` nem `>=10` evidences reais quando não houver sinais novos suficientes; validar adapter com sinais elegíveis e fixture/dev seed controlado se necessário.
-4. Manter `source_confidence <= 0.40` e UI de **Baixa confiança de fonte** em HN-only.
-5. Entregar `docs/handback/F4A_FIX_DONE.md`.
-6. Acionar Agent 5 para nova review contra D-18.
+1. ~~Ler/aprovar documentos novos e alterados.~~ Feito.
+2. ~~Commit + push da rodada 7 em `main`.~~ Feito.
+3. ~~Ativar Agent 8 / F4A.~~ Feito; F4A fechada como `approved_with_minors` após Agent 8.5.
 
 ---
 
-## Step 14 — F4B com Agent 9 (bloqueado até F4A approved)
+## Step 13 — F4A (fechado)
+
+Owner: Agent 8 + Agent 8.5.
+Status: DONE (`approved_with_minors`).
+
+Entregas:
+
+1. Motor F4A (`evidences`, `need_clusters`, `opportunity_cards`) com HN-only e `source_confidence <= 0.40`.
+2. UI Funil mínima (`/funil/*`).
+3. Adapter `signals → evidences` sem backfill.
+4. Blacklist persistida validada no motor (`test:opportunity-blacklist`).
+5. Handbacks/reviews: [`F4A_DONE.md`](handback/F4A_DONE.md), [`F4A_FIX_DONE.md`](handback/F4A_FIX_DONE.md), [`F4A_FIX_REVIEW.md`](handback/F4A_FIX_REVIEW.md).
+
+---
+
+## Step 14 — F4B com Agent 9 (atual)
 
 Owner: Agent 9. Tempo: 4–6 dias. Brief: [`AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
+
+Sequência:
+
+1. Abrir chat dedicado para Agent 9.
+2. Usar o prompt do brief [`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
+3. Validar approval first: arquivos, custo, riscos, cadência cron de Trends e sem schema novo do motor.
+4. Entregar `docs/handback/F4B_DONE.md`.
+5. Acionar Agent 5 para review F4B.
 
 ---
 

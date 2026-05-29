@@ -1,9 +1,9 @@
 # GoMVP
 
-Radar automático de oportunidades B2C da Built2Go.
-Coleta sinais de fontes públicas (HN, Product Hunt, RSS, Apple RSS, Stack Exchange), aplica blacklist obrigatória, extrai dores com IA, agrupa por similaridade vetorial, gera até 30 ideias rankeadas 2x/semana e permite ao operador único aprovar/rejeitar/marcar como promissora. Apenas ideias aprovadas geram brief de MVP.
+Motor interno de oportunidades B2C da Built2Go.
+Coleta sinais públicos, normaliza evidências (`evidences`), agrupa dores em `need_clusters`, gera `opportunity_cards` com scoring multi-axis e só permite ideias/briefs após gates humanos.
 
-> **Status atual:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). Painel SaaS interno disponível em `(dashboard)/` com 15 rotas. F4 ainda não iniciada. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
+> **Status atual:** F0/F1/F2/F3 concluídas. **F4A (Opportunity Motor HN-only) aprovada com minors**; próximo gate é **F4B / Agent 9 (Google Trends para cross-source confidence)**. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
 
 ## Stack
 
@@ -77,26 +77,29 @@ Use uma conta criada no Supabase Auth (Authentication → Users → Add user →
 | `npm run db:migrate` | Aplica migrations pendentes no banco. |
 | `npm run db:seed` | Cria/atualiza linha em `cost_budgets` do mês corrente. |
 | `npm run test:budget` | Valida thresholds 0.80/0.90/1.00 do `assertBudget()`. |
+| `npm run test:opportunity-gate` | Valida state machine F4A. |
+| `npm run test:opportunity-blacklist` | Valida blacklist persistida no motor F4A. |
 
 ## Estrutura
 
 ```
 src/
 ├── app/
-│   ├── (dashboard)/        # painel autenticado
+│   ├── (dashboard)/        # painel autenticado + Funil F4A
 │   ├── api/cron/           # endpoints disparados pelo Vercel Cron
 │   ├── auth/               # rotas de auth (signout)
 │   ├── login/
 │   ├── layout.tsx
 │   └── page.tsx
 ├── ai/                     # provider, openai, budget
-├── collectors/             # F1+ (vazio em F0)
-├── components/ui/          # shadcn primitives
+├── collectors/             # coletores (HN em produção)
+├── components/             # dashboard + shadcn primitives
 ├── db/                     # schema, client, migrations, seed
-├── feedback/               # F4+ (vazio em F0)
 ├── lib/                    # auth, runs, env, utils
-├── pipeline/               # F1+ (vazio em F0)
-└── prompts/                # F2+ (vazio em F0)
+├── motor/                  # F4 opportunity motor source-agnostic
+├── pipeline/               # F1/F2 legado
+├── prompts/                # prompts versionados
+└── sources/                # F4/F5 source adapters/normalizers
 ```
 
 ## Princípios operacionais

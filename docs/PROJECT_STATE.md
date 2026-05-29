@@ -15,12 +15,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Current phase** | F4A — Opportunity Motor em correção. Agent 8 entregou F4A, Agent 5 revisou como `rejected`; Agent 0 reavaliou o gate e criou Agent 8.5 para correção antes de qualquer F4B. |
-| **Last completed phase** | F3 — Painel + Ações (com QA estruturado) |
-| **Active agent** | Agent 8.5 (próximo) — correção pontual da F4A conforme D-18; Agent 0 preparou o brief. |
-| **Last reviewer agent** | Agent 5 — revisou F4A como `rejected` em [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md). |
+| **Current phase** | F4B — Cross-source Google Trends (próximo gate). |
+| **Last completed phase** | F4A — Opportunity Motor / Evidence Layer, aprovado com minors após correção Agent 8.5 |
+| **Active agent** | Agent 9 (próximo) — F4B Cross-source Google Trends |
+| **Last reviewer agent** | Agent 5 — revisou F4A fix como `approved_with_minors` em [`handback/F4A_FIX_REVIEW.md`](handback/F4A_FIX_REVIEW.md). |
 | **Current branch** | `main` |
-| **Last updated** | 2026-05-28 (reavaliação F4A) |
+| **Last updated** | 2026-05-29 (F4A approved_with_minors; próximo F4B) |
 
 ## Status por fase
 
@@ -30,8 +30,8 @@
 | F1 — Coleta HN | [`agents/AGENT_3_F1_COLETA_HN.md`](agents/AGENT_3_F1_COLETA_HN.md) | [`handback/F1_DONE.md`](handback/F1_DONE.md) | [`handback/F1_REVIEW.md`](handback/F1_REVIEW.md) | DONE (`approved_with_minors`) |
 | F2 — IA + Ideias (legado) | [`agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | [`handback/F2_DONE.md`](handback/F2_DONE.md) | [`handback/F2_REVIEW.md`](handback/F2_REVIEW.md) | DONE (`approved_with_minors`) |
 | F3 — Painel + Ações | Agent 6 ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) + [`handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) + [`handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md) | DONE (`approved_with_minors`) |
-| **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) + fix [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) | [`handback/F4A_DONE.md`](handback/F4A_DONE.md); aguardando `F4A_FIX_DONE.md` | [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md) + reavaliação Agent 0 | **NEEDS_CORRECTION** (Agent 8.5; não iniciar F4B) |
-| **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | — | — | PENDING (após F4A) |
+| **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) + fix [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) | [`handback/F4A_DONE.md`](handback/F4A_DONE.md) + [`handback/F4A_FIX_DONE.md`](handback/F4A_FIX_DONE.md) | [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md) + [`handback/F4A_FIX_REVIEW.md`](handback/F4A_FIX_REVIEW.md) | DONE (`approved_with_minors`) |
+| **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | — | — | READY TO START |
 | **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md) | — | — | PENDING (após F4B) |
 | F5A — Product Hunt | a definir | — | — | PENDING (após F4C) |
 | F5B — Reddit | a definir | — | — | PENDING |
@@ -121,15 +121,15 @@ Evidência cruzada com handbacks e arquivos no repositório:
 - AGENTS.md atualizado com Agent 8/9/10.
 - Handback do redesign em `handback/AGENT_0_F4_REDESIGN.md`.
 
-**Aguardando do operador:**
+**Próximo gate:**
 
-1. ~~Validação dos docs entregues nesta rodada (rodada 7).~~ **Direção estratégica aprovada** (2026-05-09).
-2. ~~Ativação inicial do Agent 8.~~ **F4A implementada e revisada como rejected**.
-3. **Correção F4A pelo Agent 8.5** com o gate D-18: sem exigir `qualified_opportunity`, sem falsear volume, aplicando blacklist/domain-risk/`not_indielab_fit` antes de promover `opportunity_candidate`.
+1. ~~F4A implementada e corrigida.~~ **Aprovada com minors** após Agent 8.5 + review Agent 5.
+2. Ativar **Agent 9 / F4B** em chat dedicado, usando [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
+3. F4B deve validar cross-source confidence com Google Trends, sem alterar schema do motor e sem iniciar F4C/F5.
 
 ## Reviews pendentes
 
-F4A tem review Agent 5 concluída como `rejected`. Próxima review: nova revisão Agent 5 após `F4A_FIX_DONE.md` do Agent 8.
+Nenhuma review pendente. Próxima review: F4B após `F4B_DONE.md` do Agent 9.
 
 ## Blockers conhecidos
 
@@ -140,7 +140,7 @@ F4A tem review Agent 5 concluída como `rejected`. Próxima review: nova revisã
 - **B-05** — ~~Mudanças da F3 ainda não commitadas em git.~~ **Resolvido** em 2026-05-06 (`713d773`, `d2dc898`, push em `origin/main`).
 - **B-06** — ~~PRD §3 alterado fora do escopo permitido (US$ 50→5).~~ **Resolvido** em 2026-05-06 (KPI restaurado para US$ 50). **Reaberto e re-resolvido** via **D-16**: teto de IA como **cap operacional configurável** (ENV + `cost_budgets`); **alvo típico** na validação F4/F5 do motor **US$ 5/mês** — não constante hardcoded no produto.
 - **B-07** — ~~Rodada 7 do PRD ainda não commitada em git.~~ **Resolvido**: documentação rodada 7 commitada/pushada antes de iniciar Agent 8.
-- **B-08** — **F4A rejected / gate oficial precisava ajuste.** Agent 5 rejeitou por ausência de `qualified_opportunity` e <10 evidences; Agent 0 reclassificou parte disso como regra documental inadequada para HN-only. Bloqueios reais: opportunity com categoria bloqueada/alto risco passou como `opportunity_candidate`; `test:opportunity-gate` não encerra; cobertura de gate fraca.
+- **B-08** — ~~F4A rejected / gate oficial precisava ajuste.~~ **Resolvido** por D-18 + Agent 8.5: F4A aprovada com minors; próximo gate é F4B.
 
 ## Riscos conhecidos
 
@@ -164,20 +164,19 @@ F4A tem review Agent 5 concluída como `rejected`. Próxima review: nova revisã
 
 ## Próxima ação recomendada
 
-1. Operador roda o prompt de [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) em chat dedicado para Agent 8.5.
-2. Agent 8.5 corrige somente F4A: gate/blacklist/launchability/teste, sem iniciar F4B e sem nova fonte.
-3. Agent 8.5 entrega `docs/handback/F4A_FIX_DONE.md`.
-4. Agent 5 revisa F4A contra D-18 e critérios atualizados.
-5. **Somente se F4A for approved/approved_with_minors**, ativar Agent 9 (F4B).
-6. Após F4B done + revisão Agent 5 → ativar Agent 10 (F4C).
-7. F4 fecha após F4C `approved`. Daí F5A.
+1. Operador ativa Agent 9 em chat dedicado com [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
+2. Agent 9 executa F4B (Google Trends como segunda fonte mínima) sem mexer no schema do motor e sem iniciar F4C/F5.
+3. Agent 9 entrega `docs/handback/F4B_DONE.md`.
+4. Agent 5 revisa F4B.
+5. Após F4B approved → ativar Agent 10 (F4C).
+6. F4 fecha após F4C `approved`. Daí F5A.
 
 ## Do Not Do Yet
 
 Bloqueios duros até nova aprovação:
 
-- Nenhuma fase futura adiantada (F4B, F4C, F5x, F6 só nas suas vezes).
-- Nenhum coletor novo enquanto F4A não fechar.
+- Nenhuma fase futura adiantada além do gate atual F4B (F4C, F5x, F6 só nas suas vezes).
+- Nenhuma fonte nova além de Google Trends no escopo F4B.
 - Nenhuma migration nova sem SQL preview + **aprovação humana explícita e específica daquela migration** (Q-G).
 - Nenhuma alteração em prompts `001` já em produção (P-EXT/P-FIL/P-CLU/P-IDE/P-BRF). Para mudar, criar versão `002`. P-EVI/P-TRD/P-OPP/P-IDE-002/P-BRF-002 entram como **arquivos novos** versão `001`.
 - Nenhuma chamada IA fora dos pipelines existentes que ignore `assertBudget()`.
