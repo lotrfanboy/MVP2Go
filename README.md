@@ -3,7 +3,7 @@
 Motor interno de oportunidades B2C da Built2Go.
 Coleta sinais públicos, normaliza evidências (`evidences`), agrupa dores em `need_clusters`, gera `opportunity_cards` com scoring multi-axis e só permite ideias/briefs após gates humanos.
 
-> **Status atual:** F0/F1/F2/F3 concluídas. **F4A e F4B aprovadas com minors**; próximo gate é **F4UX / Agent 10 (clareza operacional do Funil antes da F4C)**. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
+> **Status atual:** F0/F1/F2/F3 concluídas. **F4A/F4B/F4UX aprovadas com minors**; **F4OPS / Agent 12 está em andamento** para Vercel Preview/Staging + validação de performance antes da F4C. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
 
 ## Stack
 

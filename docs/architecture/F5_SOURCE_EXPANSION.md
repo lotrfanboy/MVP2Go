@@ -2,7 +2,7 @@
 
 > **Status:** Roadmap aprovado pelo operador em 2026-05-06.
 > **Owner do documento:** Agent 0.
-> **Pré-requisito:** F4 (F4A + F4B + F4C) **fechada e aprovada** pelo Agent 5.
+> **Pré-requisito:** F4 (F4A + F4B + F4UX + F4OPS + F4C) **fechada e aprovada** pelo Agent 5.
 > **Princípio central:** F5 **não altera o motor**. Cada nova fonte é apenas **`collector → raw_source_item → normalizer → evidence`**.
 
 ---
@@ -215,7 +215,7 @@ Cada uma usa o mesmo padrão `src/sources/<source>/`. Sem brief específico até
 ## 8. Cronograma sugerido
 
 ```
-F4 fechada (F4A + F4B + F4C aprovadas)
+F4 fechada (F4A + F4B + F4UX + F4OPS + F4C aprovadas)
    │
    ▼
 F5A — Product Hunt        (1 sprint, ~3-5 dias)

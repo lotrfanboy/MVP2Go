@@ -23,7 +23,7 @@
 - **Allowed scope:**
   - Ler tudo.
   - Criar/atualizar docs em `docs/PROJECT_STATE.md`, `docs/DECISIONS.md`, `docs/AGENTS.md`, `docs/HANDOFF_TEMPLATE.md`, `docs/NEXT_STEPS.md`, `docs/agents/*.md`, `docs/handback/AGENT_0_*.md`.
-  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-19 e DP-23).
+  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-20 e DP-24).
   - **Editar `docs/PRD.md`** apenas sob autorização explícita do operador para mudança estratégica registrada como D-XX (autorização concedida em 2026-05-06 para rodada 7 do PRD).
   - **Editar `docs/IMPLEMENTATION_PLAN.md`** quando refletir decisão registrada em DECISIONS.
   - **Editar `.cursor/rules/gomvp-product-rules.mdc`** apenas sob autorização explícita do operador para refletir princípios novos (autorização concedida em 2026-05-06).
@@ -271,7 +271,31 @@
   - Tocar `.env*`, secrets, MCP.
   - Commit/push/PR sem aprovação.
 - **Input docs:** PRD, F4 architecture, Implementation Plan, Project State, F4B_DONE, F4B_REVIEW, frontend skill, rules.
-- **Expected handback:** `docs/handback/F4UX_DONE.md`.
+- **Expected handback:** [`docs/handback/F4UX_DONE.md`](handback/F4UX_DONE.md) — entregue pelo Codex em 2026-06-02.
+- **Status atual:** DONE (`approved_with_minors`) após [`docs/handback/F4UX_REVIEW.md`](handback/F4UX_REVIEW.md).
+
+---
+
+## Agent 12 — F4OPS Vercel Preview / Staging
+
+- **Brief:** [`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md).
+- **Responsabilidade:** fase operacional entre F4UX e F4C para configurar/validar Vercel Preview/Staging, fluxo branch → Preview Deploy → `main`/Production, env vars por ambiente e performance real fora do localhost.
+- **Allowed scope:**
+  - Configurar ou validar projeto Vercel apenas após aprovação operacional explícita.
+  - Definir fluxo Git branch → Preview Deploy → merge em `main` → Production.
+  - Mapear env vars necessárias por ambiente, sem registrar valores reais.
+  - Validar `npm run build` na Vercel Preview.
+  - Validar login/auth, rotas principais `/funil/*`, uma tela Sistema/Admin, logs e performance percebida.
+  - Comparar Vercel Preview vs localhost e documentar gargalos.
+  - Preparar checklist de rollback.
+- **Forbidden scope:**
+  - Alterar motor/scoring/schema/migrations/collectors/sources/prompts.
+  - Ativar `/api/cron/collect-trends` ou mexer em cron Google Trends sem decisão explícita.
+  - Iniciar F4C, F5 ou qualquer fonte nova.
+  - Expor secrets em docs, logs ou handbacks.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD, Implementation Plan, Project State, Decisions, Agents, F4A/F4B/F4UX handbacks/reviews, `package.json`, `vercel.json`, `.env.example`, `next.config.ts`, Cursor Rules, development/quality skills.
+- **Expected handback:** `docs/handback/F4OPS_DONE.md`.
 - **Status atual:** READY TO START.
 
 ---
@@ -294,9 +318,9 @@
   - Adicionar fonte nova.
   - Destruir feedback existente.
   - Commit/push/PR sem aprovação.
-- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9/10, handbacks F4A/F4B/F4UX.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9/10/12, handbacks F4A/F4B/F4UX/F4OPS e respectivos reviews.
 - **Expected handback:** `docs/handback/F4C_DONE.md`. **F4 fecha após este handback aprovado.**
-- **Status atual:** PENDING (entra após F4UX aprovado).
+- **Status atual:** PENDING (entra após F4OPS aprovado ou skip explícito do operador).
 
 ---
 
@@ -313,5 +337,6 @@
 | Agent 7 | F3 aprovado | `F3_QA_DONE.md` | acionar Agent 5 |
 | **Agent 8** | F3 QA aprovado + brief F4A aprovado pelo operador | `F4A_DONE.md` | acionar Agent 5 |
 | **Agent 9** | F4A aprovado | `F4B_DONE.md` | acionar Agent 5 |
-| **Agent 10** | F4B aprovado | `F4UX_DONE.md` | acionar Agent 5 |
-| **Agent 11** | F4UX aprovado | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |
+| **Agent 10 / Codex** | F4B aprovado | `F4UX_DONE.md` | acionar Agent 5 |
+| **Agent 12** | F4UX aprovado pelo Agent 5 | `F4OPS_DONE.md` | acionar Agent 5 |
+| **Agent 11** | F4OPS aprovado ou skip explícito | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |

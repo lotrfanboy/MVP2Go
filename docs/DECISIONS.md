@@ -88,7 +88,7 @@
 ### D-14 — Cross-source obrigatório como gate de qualidade
 - **Status:** Fechada (rodada 7, 2026-05-06).
 - **Contexto:** HN-only valida arquitetura do motor mas **não** valida mercado amplo. Source Confidence inflada vira certeza falsa.
-- **Decisão:** F4A é validação **estrutural** (HN-only): por construção, `source_confidence ≤ 0.40` em 100% das opportunities. F4B (Google Trends) é parte mínima da F4 para começar a validar cross-source. F4 só fecha após F4A + F4B + F4C.
+- **Decisão:** F4A é validação **estrutural** (HN-only): por construção, `source_confidence ≤ 0.40` em 100% das opportunities. F4B (Google Trends) é parte mínima da F4 para começar a validar cross-source. Após decisões posteriores, F4 fecha apenas após F4A + F4B + F4UX + F4OPS + F4C.
 - **Implicação:** Manual e watch **não** elevam `source_confidence` externa. Cap automático aplicado em `opportunity-score`.
 
 ### D-15 — Gates explícitos + reason codes
@@ -124,6 +124,12 @@
 - **Decisão:** Inserir uma fase intermediária curta **F4UX — Funil UX / Operator Clarity** entre F4B e F4C. F4UX organiza a experiência pelo fluxo do MOTOR: Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs. Sources são infraestrutura de evidence, não menus/produtos.
 - **Implicação:** F4C fica pausada até F4UX ser revisada. F4UX não altera motor, scoring, schema, collectors, cron, feedback, geração de ideias/briefs ou F5. Google Trends/Product Hunt/Reddit/YouTube/Reviews não viram menus principais; no máximo aparecem em áreas genéricas de Fontes/Saúde das Fontes/Source Confidence.
 
+### D-20 — F4OPS antes de F4C/F5
+- **Status:** Fechada (2026-06-02, decisão operador após F4UX review).
+- **Contexto:** F4UX melhorou o frontend/funil e foi aprovada com minors, mas o operador relatou lentidão/travamentos no localhost/Next dev. Antes de alterar motor, feedback, geração de ideias ou novas fontes, o app precisa rodar em ambiente hospedado para separar problema de dev local de gargalo real do produto.
+- **Decisão:** Inserir **F4OPS — Vercel Preview / Staging + Performance Validation** entre F4UX e F4C. Vercel é o caminho primário para Preview/Staging de Next.js. Railway fica como alternativa futura apenas se houver blocker real na Vercel ou necessidade de worker/container persistente.
+- **Implicação:** F4C e F5 ficam pausadas até F4OPS ser aprovada, salvo skip explícito do operador. F4OPS não altera motor, scoring, schema, migrations, collectors, sources, prompts ou cron. F4OPS mapeia env vars por ambiente sem valores reais, valida build/login/rotas/performance em Preview Deploy e mantém o cron Google Trends desligado até decisão operacional explícita.
+
 ---
 
 ## Princípios operacionais permanentes (PRD Apêndice E + Implementation Plan)
@@ -153,6 +159,7 @@
 - **DP-21** **F4A é gate estrutural HN-only** (D-18): não exigir `qualified_opportunity`; não falsear volume; bloquear/rejeitar categorias incompatíveis com IndieLab antes de promover `opportunity_candidate`.
 - **DP-22** **Source adapter ≠ trigger.** Cada fonte externa deve gerar `evidences` reutilizáveis pelo motor e não ficar acoplada a um único disparador. Cron geral, `watch_topics` e `manual_inputs` podem acionar a mesma fonte quando fizer sentido. Manual/watch são seeds internas e nunca contam como fonte externa; `source_confidence` só sobe quando um adapter externo (`hn`, `gtrends`, `ph`, `reddit`, `youtube`, `reviews`) grava evidence real no mesmo `topic_key`. Não criar abstração global de sources antes de 2-3 fontes repetirem o padrão.
 - **DP-23** **Navegação orientada pelo MOTOR, não por source** (D-19): o produto organiza o operador pelo fluxo Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs. Fontes externas são infraestrutura/auditabilidade; não criar menus principais por Google Trends/Product Hunt/Reddit/YouTube/Reviews.
+- **DP-24** **Preview/Staging antes de novas mudanças profundas** (D-20): `main` representa produção; branches de feature devem gerar Preview Deploy para validar UI/performance antes do merge. Deploy/staging não autoriza ativar cron GT, expor secrets, aplicar migrations, alterar motor/scoring/schema ou iniciar F4C/F5. Variáveis de ambiente devem ser separadas por Production/Preview/Development e documentadas por nome, nunca por valor.
 
 ---
 
@@ -248,6 +255,16 @@
   - Sem migration. Sem alteração de pipeline.
   - É override de **exibição**, não de classificação. Quem audita filtradas vê o histórico real.
   - Caso futuro queira reclassificação real, abrir nova decisão (provavelmente migration em F5 ou F4).
+
+### O-11 — Vercel Preview/Staging como caminho operacional primário
+- **Status:** Em vigor desde 2026-06-02 (F4OPS).
+- **Contexto:** O operador precisa usar o app fora do localhost para validar se a lentidão vem do ambiente local/dev server ou do app.
+- **Decisão:** F4OPS deve priorizar Vercel para Preview/Staging, com fluxo branch → Preview Deploy → merge em `main` → Production. Railway fica fora da prioridade atual, salvo blocker real na Vercel ou necessidade futura de worker/container persistente.
+- **Implicação:**
+  - F4OPS pode mapear e configurar envs por ambiente somente após aprovação operacional.
+  - Secrets reais nunca entram em docs, handbacks ou logs.
+  - `GTRENDS_ENABLED`/BigQuery e `/api/cron/collect-trends` permanecem desligados até aprovação explícita.
+  - Performance deve ser comparada entre Vercel Preview e localhost antes de propor correções.
 
 ---
 

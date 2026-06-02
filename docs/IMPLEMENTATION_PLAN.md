@@ -1,7 +1,7 @@
 # GoMVP V1 — Implementation Plan
 
 > **Versão:** 1.1 (rodada 7 do PRD).
-> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4A e F4B concluídas (`approved_with_minors`)**. F4UX entra como fase intermediária de clareza operacional antes da F4C. F5 segue como Source Expansion (PH > Reddit > YouTube > Reviews). Hardening fica em F6. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
+> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4A, F4B e F4UX concluídas (`approved_with_minors`)**. F4OPS entra antes da F4C para validar Vercel Preview/Staging e performance real. F5 segue como Source Expansion (PH > Reddit > YouTube > Reviews). Hardening fica em F6. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
 > **Fonte canônica:** [`docs/PRD.md`](PRD.md). Detalhes de arquitetura F4: [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md). Roadmap F5: [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Em qualquer divergência, o **PRD vence**.
 
 ---
@@ -18,6 +18,7 @@
 | **F4A Motor + Evidence Layer (HN-only)** | **Agent 8** | [`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) | `docs/handback/F4A_DONE.md` | Agent 5 |
 | **F4B Cross-source Google Trends** | **Agent 9** | [`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | `docs/handback/F4B_DONE.md` | Agent 5 |
 | **F4UX Funil UX / Operator Clarity** | **Agent 10** | [`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md) | `docs/handback/F4UX_DONE.md` | Agent 5 |
+| **F4OPS Vercel Preview / Staging** | **Agent 12** | [`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md) | `docs/handback/F4OPS_DONE.md` | Agent 5 |
 | **F4C Feedback + Idea/Brief gates** | **Agent 11** | [`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md) | `docs/handback/F4C_DONE.md` | Agent 5 |
 | F5A Product Hunt | a definir | a definir | `docs/handback/F5A_DONE.md` | Agent 5 |
 | F5B Reddit | a definir | a definir | `docs/handback/F5B_DONE.md` | Agent 5 |
@@ -25,7 +26,7 @@
 | F5D Reviews | a definir | a definir | `docs/handback/F5D_DONE.md` | Agent 5 |
 | F6 Hardening | a definir | a definir | `docs/handback/F6_DONE.md` | Agent 5 |
 
-Sequência **estritamente serial** dentro do bloco F4 (F4A → F4B → F4UX → F4C). F5 também serial (F5A → F5B → F5C → F5D), uma fonte por vez sob aprovação. F6 ao final.
+Sequência **estritamente serial** dentro do bloco F4 (F4A → F4B → F4UX → F4OPS → F4C). F4C só entra antes de F4OPS se o operador pular F4OPS explicitamente. F5 também serial (F5A → F5B → F5C → F5D), uma fonte por vez sob aprovação. F6 ao final.
 
 ---
 
@@ -284,7 +285,7 @@ Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architec
 
 ## F4UX — Funil UX / Operator Clarity
 
-**Owner:** Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). **Tempo estimado:** fase curta.
+**Owner:** Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). **Status:** DONE (`approved_with_minors`) após [`docs/handback/F4UX_REVIEW.md`](handback/F4UX_REVIEW.md). **Tempo estimado:** fase curta.
 
 ### Entregáveis (resumo)
 
@@ -302,7 +303,38 @@ Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architec
 - [ ] UI mostra/explica ausência de overlap e baixa confiança sem falsear validação.
 - [ ] Funil, Legado, Configurações/Sistema e Fontes/Source Confidence ficam claramente separados.
 - [ ] Não altera motor, scoring, schema, migrations, collectors, cron, feedback, ideias, briefs ou F5.
-- [ ] `npm run typecheck`, `npm run lint` e `npm run build` passam.
+- [x] `npm run typecheck`, `npm run lint` e `npm run build` passaram após `npm install`.
+- [x] Agent 5 confirmou F4UX como `approved_with_minors`.
+
+---
+
+## F4OPS — Vercel Preview / Staging + Performance Validation
+
+**Owner:** Agent 12 ([`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md)). **Tempo estimado:** fase curta.
+
+### Entregáveis (resumo)
+
+- Projeto Vercel configurado ou configuração existente validada, sob aprovação operacional do operador.
+- Fluxo Git documentado: branch de feature → Preview Deploy → merge em `main` → Production.
+- Env vars mapeadas por ambiente (`Production`, `Preview`, `Development`) sem registrar valores reais.
+- Build validado em Vercel Preview.
+- Login/Auth e rotas principais validadas em URL pública de Preview.
+- Performance percebida comparada entre Vercel Preview e localhost.
+- Gargalos documentados com propostas de correção, sem mexer em motor/scoring/schema/sources.
+- Checklist de rollback documentado.
+
+### Gates F4OPS
+
+- [ ] Projeto builda na Vercel Preview.
+- [ ] App abre em URL pública de Preview.
+- [ ] Login funciona.
+- [ ] Rotas principais carregam: `/funil/radar`, `/funil/opportunities`, detalhe de opportunity quando houver dados, `/funil/evidencias` ou equivalente de Evidence Trace, `/funil/trends`, `/funil/need-clusters`, `/funil/manual`, `/funil/watch-topics` e pelo menos uma tela de Sistema/Admin.
+- [ ] Não há tela branca nem erro crítico de console/server logs.
+- [ ] Navegação entre telas é aceitável e comparada com localhost.
+- [ ] Gargalos de performance são documentados.
+- [ ] Cron Google Trends continua desligado.
+- [ ] Secrets não aparecem em docs/logs.
+- [ ] Motor/scoring/schema/migrations/sources não foram alterados.
 
 ---
 
@@ -368,6 +400,8 @@ Cada fonte segue o padrão `src/sources/<source>/` + endpoint `/api/cron/collect
 F0 → F1 → F2 → F3 → (DONE até aqui)
    → F4A (motor + evidence + opportunity, HN-only) → Agent 5 → approved
    → F4B (Google Trends, cross-source) → Agent 5 → approved
+   → F4UX (funil UX / operator clarity) → Agent 5 → approved
+   → F4OPS (Vercel Preview / staging + performance) → Agent 5 → approved
    → F4C (feedback + idea/brief gates) → Agent 5 → approved  [F4 fechada]
    → F5A (Product Hunt) → Agent 5 → approved
    → F5B (Reddit) → Agent 5 → approved

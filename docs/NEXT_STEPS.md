@@ -7,7 +7,7 @@
 
 ## Estado atual em uma linha
 
-**F4B aprovada com minors.** Google Trends entrou como source adapter BigQuery-first e evidence `search_momentum`; não houve overlap real GT+HN, mas isso não bloqueia. Próximo passo: **Agent 10 / F4UX** para clareza operacional do Funil antes da F4C.
+**F4OPS está em andamento.** Próximo passo imediato: commitar/pushar a remoção controlada de `src/app/(dashboard)/page.tsx` junto da documentação F4OPS e disparar novo Preview Deploy via Git.
 
 ---
 
@@ -16,7 +16,7 @@
 - **Steps 1–9** — DONE (camada documental, git inicial, F3 entregue, Agent 5 review, F3 QA done + review). Detalhes nos handbacks.
 - **Step 10 / 10b** — DONE (PRD KPI revertido para US$ 50/mês na época, commits da F3 push em `origin/main`).
 - **Step 11C / 11C-review** — DONE (Agent 7 + Agent 5).
-- **Step 11 (rodada anterior)** — Operador escolheu **Caminho A (iniciar F4)**. Sub-decisão tomada na rodada 7: **F4 antiga (feedback+brief) vira F4 nova (Opportunity Motor)**; F4UX foi inserida após F4B — ver D-11..D-19 e DP-23.
+- **Step 11 (rodada anterior)** — Operador escolheu **Caminho A (iniciar F4)**. Sub-decisões da rodada 7/operacional: **F4 antiga (feedback+brief) vira F4 nova (Opportunity Motor)**; F4UX foi inserida após F4B; F4OPS foi inserida após F4UX — ver D-11..D-20 e DP-24.
 
 ---
 
@@ -35,7 +35,7 @@ Documentos entregues nesta rodada:
 | [`docs/handback/AGENT_0_F4_REDESIGN.md`](handback/AGENT_0_F4_REDESIGN.md) | NOVO (handback desta rodada) |
 | [`docs/PRD.md`](PRD.md) | ATUALIZADO (rodada 7: §1, §3, §6, §8, §9, §10, §11, §14, §17, §18, §19, §20, §22, §24, §26, Apêndice E) |
 | [`docs/IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) | ATUALIZADO (F4 split em F4A/B/C, F5 source expansion, F6 hardening, mapa de fases atualizado) |
-| [`docs/DECISIONS.md`](DECISIONS.md) | ATUALIZADO (D-08 substituída por D-16; D-11..D-19; O-01 encerrada; DP-15..DP-23) |
+| [`docs/DECISIONS.md`](DECISIONS.md) | ATUALIZADO (D-08 substituída por D-16; D-11..D-20; O-01/O-11; DP-15..DP-24) |
 | [`docs/PROJECT_STATE.md`](PROJECT_STATE.md) | ATUALIZADO (current phase = F4UX; F4B closed; F4C pausada) |
 | [`docs/AGENTS.md`](AGENTS.md) | ATUALIZADO (Agent 8/9/10/11 adicionados; Agent 0 ganha permissão escrita em PRD/architecture sob autorização explícita) |
 | [`.cursor/rules/gomvp-product-rules.mdc`](../.cursor/rules/gomvp-product-rules.mdc) | ATUALIZADO (princípios opportunity-first; nova ordem F5; D-16 cap configurável + alvo típico US$ 5 na validação F4/F5; manual/watch não elevam source confidence) |
@@ -81,36 +81,72 @@ Minors aceitos: sem overlap real GT+HN; `source_confidence >= 0.65` não demonst
 
 ---
 
-## Step 15 — F4UX com Agent 10 (atual)
+## Step 15 — F4UX com Codex / Agent 10 (fechado)
 
 Owner: Agent 10. Tempo: curto. Brief: [`AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md).
 
-Sequência:
+Status: DONE (`approved_with_minors`) após review Agent 5 em [`F4UX_REVIEW.md`](handback/F4UX_REVIEW.md).
 
-1. Abrir chat dedicado para Agent 10.
-2. Usar o prompt do brief [`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md).
-3. Melhorar clareza operacional do Funil: Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs.
-4. Não mexer em motor, scoring, schema, collectors, cron, feedback, geração de ideias/briefs ou F5.
-5. Entregar handback F4UX.
-6. Acionar Agent 5 para review F4UX.
+Entregas reportadas em [`F4UX_DONE.md`](handback/F4UX_DONE.md):
+
+1. Navegação e telas `/funil/*` reorganizadas com linguagem evidence-first.
+2. Componentes compartilhados em `src/components/funil/funil-ui.tsx`.
+3. Manual inputs e watch topics descritos como seeds/diagnóstico, não validação externa.
+4. Ideias e briefs marcados como F4C, sem geração nesta fase.
+5. `npm run typecheck`, `npm run lint`, `npm run build` e testes F4A/F4B reportados como ok.
+
+Minors aceitos:
+
+1. Skills `.agents/skills/*` e `skills-lock.json` adicionados durante UX; manter ou limpar depois sob decisão do operador.
+2. Vulnerabilidades transitivas reportadas por `npm install`; tratar fora do gate.
+3. Smoke autenticado visual não foi refeito pelo Agent 5; F4OPS validará rotas em ambiente hospedado.
 
 ---
 
-## Step 16 — F4C com Agent 11 (após F4UX approved)
+## Step 16 — F4OPS com Agent 12 (atual)
+
+Owner: Agent 12. Tempo: curto. Brief: [`AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md).
+
+Status: IN_PROGRESS.
+
+Objetivo:
+
+1. Configurar/validar Vercel Preview/Staging sem alterar produto.
+2. Mapear env vars por ambiente sem registrar valores reais.
+3. Validar build, login, rotas principais, logs e performance percebida em URL pública de Preview.
+4. Comparar Vercel Preview vs localhost para entender se a lentidão é local/dev server ou gargalo real.
+5. Manter cron Google Trends desligado e não alterar motor/scoring/schema/sources.
+
+Sequência:
+
+1. ~~Ativar Agent 12 em chat dedicado.~~ Feito.
+2. Agent 12 identificou que o próximo passo é commitar a remoção de `src/app/(dashboard)/page.tsx` para novo Preview Deploy via Git.
+3. Operador/Agent 0 comita e pusha essa remoção junto da documentação F4OPS.
+4. Operador tenta novo Preview Deploy.
+5. Se a Vercel ainda falhar, usar redeploy sem build cache.
+6. Depois continuar F4OPS: env mapping, login, rotas principais, logs e performance Preview vs localhost.
+7. Agent 12 entrega `docs/handback/F4OPS_DONE.md`.
+8. Acionar Agent 5 para review F4OPS.
+
+---
+
+## Step 17 — F4C com Agent 11 (após F4OPS approved ou skip explícito)
 
 Owner: Agent 11. Tempo: 3–5 dias. Brief: [`AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md).
+
+Status: bloqueada até F4OPS ser aprovada ou o operador pular F4OPS explicitamente.
 
 **F4 fecha após F4C `approved`.**
 
 ---
 
-## Step 17 — F5 incremental
+## Step 18 — F5 incremental
 
 Após F4 fechada. Ordem: PH > Reddit > YouTube > Reviews. Detalhes em [`architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Cada fonte um sprint dedicado, sob aprovação caso a caso.
 
 ---
 
-## Step 18 — F6 Hardening
+## Step 19 — F6 Hardening
 
 Após F5 ter cobertura mínima (≥3 fontes externas distintas em produção). Kill switch, retries, alertas, retenção LGPD + purge, RUNBOOK, backup.
 
@@ -138,7 +174,7 @@ Após F5 ter cobertura mínima (≥3 fontes externas distintas em produção). K
 - [x] Criação dos briefs Agent 8/9/10.
 - [x] Atualização de PRD (rodada 7) cobrindo §1, §3, §6, §8, §9, §10, §11, §14, §17, §18, §19, §20, §22, §24, §26, Apêndice E.
 - [x] Atualização de IMPLEMENTATION_PLAN com fases novas.
-- [x] Atualização de DECISIONS com D-11..D-19 + DP-15..DP-23 + encerramento de O-01.
+- [x] Atualização de DECISIONS com D-11..D-20 + DP-15..DP-24 + registros O-01/O-11.
 - [x] Atualização de PROJECT_STATE com fase corrente, blockers, risks, OQs.
 - [x] Atualização de AGENTS com Agent 8/9/10 e permissões expandidas do Agent 0.
 - [x] Atualização de NEXT_STEPS (este arquivo).

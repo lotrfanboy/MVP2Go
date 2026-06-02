@@ -1,7 +1,7 @@
 # GoMVP V1 — PRD
 
 > **Versão:** 1.1 (rodada 7).
-> **Status:** decisões D-01 a D-19 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A e F4B aprovadas com minors. Próximo gate: F4UX (Funil UX / Operator Clarity).**
+> **Status:** decisões D-01 a D-20 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A, F4B e F4UX aprovadas com minors. Próximo gate: F4OPS (Vercel Preview / Staging + Performance Validation) antes da F4C.**
 > **Owner:** Built2Go (operador único).
 > **Última revisão:** rodada 7 + ajuste 2026-05-09 (cap IA D-16 = alvo operacional F4/F5 configurável por ENV/banco; sem backfill F4A; badge baixa confiança em qualified HN-only).
 
@@ -110,9 +110,9 @@ Todas via API/RSS oficial, sem scraping. Cada fonte segue o padrão `src/sources
 
 1. **Hacker News** (Algolia HN Search API) — desde F1. Evidence: `discussion_signal`, `repeated_pain`, `workaround_signal`, `alternative_request`.
 
-**Próximo gate (F4B):**
+**Implementado em F4B:**
 
-2. **Google Trends** — segunda fonte mínima para validar **cross-source confidence**. Evidence: `search_momentum`. Ver `docs/agents/AGENT_9_F4B_TRENDS.md`. Sem Trends em produção, qualquer opportunity tem `source_confidence ≤ 0.40` (cap automático).
+2. **Google Trends** — segunda fonte mínima para validar **cross-source confidence**. Evidence: `search_momentum`. F4B foi aprovada com minors: sem overlap real GT+HN nos dados atuais e cron GT desligado até decisão operacional. Sem Trends em produção, qualquer opportunity tem `source_confidence ≤ 0.40` (cap automático).
 
 **Roadmap F5 — Source Expansion** (uma por vez sob aprovação, conforme `docs/architecture/F5_SOURCE_EXPANSION.md`):
 
@@ -599,7 +599,8 @@ flowchart LR
     F3 --> F4A["F4A Motor + Evidence + Opportunities (HN-only)"]
     F4A --> F4B["F4B Cross-source com Google Trends"]
     F4B --> F4UX["F4UX Funil UX / Operator Clarity"]
-    F4UX --> F4C["F4C Feedback estruturado + Idea/Brief gates"]
+    F4UX --> F4OPS["F4OPS Vercel Preview / Staging"]
+    F4OPS --> F4C["F4C Feedback estruturado + Idea/Brief gates"]
     F4C --> F5A["F5A Product Hunt"]
     F5A --> F5B["F5B Reddit"]
     F5B --> F5C["F5C YouTube"]
@@ -607,7 +608,7 @@ flowchart LR
     F5D --> F6["F6 Hardening (kill switch, alertas, retenção, RUNBOOK)"]
 ```
 
-**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A e F4B entregues e aprovadas com minors. Próximo gate: F4UX / Agent 10.
+**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A, F4B e F4UX entregues e aprovadas com minors. Próximo gate: F4OPS / Agent 12. F4C só entra após F4OPS ou skip explícito do operador.
 
 - **F0 Fundação (1–2 dias)**: repo, Next.js 15, Supabase + pgvector, Drizzle, Auth, `runs`/`ai_usage_logs`/`cost_budgets`, `AIProvider`+`OpenAIProvider`, `assertBudget`, deploy mínimo. **Vercel Cron configurado vazio**.
 - **F1 Coleta + Storage (3–5 dias) — sem IA, sem embeddings, sem custo IA. Entrega visual: "Coleta / Raw Items / Candidatos" (não há `signals` ainda)**:
@@ -637,8 +638,9 @@ flowchart LR
 - **F3 Painel + Ações (3–4 dias)** — DONE.
 - **F4A Motor Base / Evidence Layer (5–7 dias)** — DONE (`approved_with_minors`). Owner: Agent 8 + Agent 8.5 fix ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md)). Motor source-agnostic + adapter `signals → evidences` + tabelas novas + scoring multi-axis + state machine + UI Funil mínima. HN-only. Source Confidence ≤ 0.40 por design.
 - **F4B Cross-source com Google Trends (4–6 dias)** — DONE (`approved_with_minors`). Owner: Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). Trends como segunda fonte mínima. `search_momentum`. Adapter reutilizável por cron geral, `watch_topics` e `manual_inputs`. Source Confidence pode subir para ≥ 0.65 quando há evidence externa distinta no mesmo `topic_key`; não houve overlap real GT+HN nos dados atuais, sem bloquear a fase.
-- **F4UX Funil UX / Operator Clarity (curta)** — Owner: Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). Clareza operacional do Funil antes de feedback: navegação orientada pelo MOTOR, auditabilidade de evidences, Evidence Trace, estados vazios, baixa confiança, ausência de overlap e próximos passos operacionais. Não altera motor/scoring/schema/cron.
-- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 11 ([`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md)). Entra após F4UX. Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
+- **F4UX Funil UX / Operator Clarity (curta)** — DONE (`approved_with_minors`). Owner: Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). Clareza operacional do Funil antes de feedback: navegação orientada pelo MOTOR, auditabilidade de evidences, Evidence Trace, estados vazios, baixa confiança, ausência de overlap e próximos passos operacionais. Não altera motor/scoring/schema/cron.
+- **F4OPS Vercel Preview / Staging + Performance Validation (curta)** — Owner: Agent 12 ([`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md)). Valida o app hospedado em Vercel Preview/Staging, mapeia envs por ambiente, testa build/login/rotas/performance e compara com localhost. Não altera motor/scoring/schema/sources/cron e não ativa Google Trends.
+- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 11 ([`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md)). Entra após F4OPS ou skip explícito do operador. Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
 - **F5A..F5D Source Expansion (incremental)** — ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Ordem: PH > Reddit > YouTube > Reviews. Cada fonte um sprint (~3-8 dias) sob aprovação caso a caso.
 - **F6 Hardening (2–3 dias)** — kill switch E2E, retries, alertas, retenção LGPD + purge, RUNBOOK, backup.
 
@@ -652,7 +654,8 @@ Total estimado V2: F4A+B+C ~3-4 semanas; F5 incremental conforme demanda; F6 ao 
 - **F3**: 30 ideias revisadas em ≤ 30 min (KPI 30); aba Filtradas mostra motivos. — DONE.
 - **F4A**: DONE (`approved_with_minors`). Validação **estrutural HN-only**, não validação de mercado. Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill) e adapta corretamente os elegíveis; se houver menos de 10 sinais novos, isso é **dados insuficientes**, não falha do motor. Fixture/dev seed valida lote sem inventar dados reais. Gate mínimo validado: evidence válida → `need_cluster` → `opportunity_card`; `source_confidence ≤ 0.40` em 100% das opportunities HN-only; UI exibe **Baixa confiança de fonte** quando aplicável; motor **rejeita** opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` e não a promove para `opportunity_candidate`; `test:opportunity-gate` e `test:opportunity-blacklist` encerram corretamente; manual analysis E2E ok dentro do escopo F4A; F3 legado intacto. **`qualified_opportunity` não é obrigatório em F4A.**
 - **F4B**: DONE (`approved_with_minors`). Pelo menos 1 evidence `search_momentum` de `gtrends` persistida e visível no evidence trace; BigQuery-first com SDK oficial; sem scraping/provider pago; endpoint protegido por `CRON_SECRET`; cron operacional desligado; sem overlap real GT+HN nos dados atuais, portanto `source_confidence ≥ 0.65` não demonstrado por falta de match, sem reprovar automaticamente.
-- **F4UX**: Funil organizado pelo fluxo do MOTOR, não por source; operador consegue entender o que foi encontrado, quais evidences existem, origem/source de cada evidence, overlap/ausência de overlap, baixa confiança, rejeições/filtros e próximo passo operacional; sem alterar motor/scoring/schema/cron.
+- **F4UX**: DONE (`approved_with_minors`). Funil organizado pelo fluxo do MOTOR, não por source; UI explica evidences, origem/source, overlap/ausência de overlap, baixa confiança, rejeições/filtros e próximo passo operacional; sem alterar motor/scoring/schema/cron.
+- **F4OPS**: Vercel Preview builda; app abre em URL pública de Preview; login funciona; rotas principais carregam sem tela branca; sem erro crítico de console/server logs; navegação é aceitável; performance percebida é comparada com localhost; gargalos são documentados; cron GT continua desligado; secrets não aparecem em logs/docs; motor/scoring/schema/sources não foram alterados.
 - **F4C**: idea só nasce com `opportunity_id NOT NULL` em rota nova; brief só nasce com `idea_allowed`; reason_code obrigatório validado; backfill `feedback` legado sem perda de dados.
 - **F5x** (cada fonte): ≥ 30 evidences/dia por 3 dias seguidos; ≥ 1 opportunity sobe `source_confidence` para próxima faixa; nenhuma alteração no motor.
 - **F6**: kill switch testado no **cap vigente** configurado (na validação F4/F5, cenário típico US$ 5/mês); alerta chega; purge LGPD limpa janela; backup restaura em sandbox.
@@ -689,6 +692,7 @@ Restaram apenas pontos menores que não bloqueiam F0:
 - **D-17** **Nova ordem de fontes em F5: PH > Reddit > YouTube > Reviews.** Substitui ordem do PRD V1 §8. RSS/Apple/Stack Exchange ficam como backup sem prioridade. _Aprovado rodada 7._
 - **D-18** **Gate oficial F4A é estrutural.** F4A HN-only não exige `qualified_opportunity` nem volume real mínimo absoluto; valida estrutura do motor, adapter e bloqueios de risco. _Aprovado 2026-05-28._
 - **D-19** **F4UX antes de F4C.** Inserir fase curta de clareza operacional do Funil antes de feedback/ideias/briefs; navegação orientada pelo MOTOR, não por source. _Aprovado 2026-06-01._
+- **D-20** **F4OPS antes de F4C/F5.** Validar Vercel Preview/Staging e performance real antes de novas mudanças de motor/source; Vercel é primário, Railway fica alternativa futura. _Aprovado 2026-06-02._
 
 Nenhuma decisão crítica em aberto.
 

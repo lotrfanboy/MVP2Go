@@ -2,7 +2,7 @@
 
 > **Status:** Proposta aprovada pelo operador em 2026-05-06.
 > **Owner do documento:** Agent 0 (Orchestrator).
-> **Escopo:** arquitetura conceitual e técnica das fases **F4A**, **F4B** e **F4C** do GoMVP.
+> **Escopo:** arquitetura conceitual e técnica das fases **F4A**, **F4B**, **F4UX**, **F4OPS** e **F4C** do GoMVP.
 > **Fonte canônica de produto:** [`docs/PRD.md`](../PRD.md). Quando este arquivo divergir do PRD, **PRD vence** e este arquivo deve ser corrigido.
 
 ---
@@ -726,7 +726,45 @@ Gates F4UX:
 - [ ] Navegação principal não é organizada por source.
 - [ ] F3 legado permanece funcional e secundário.
 
+Status F4UX: entregue pelo Codex em `docs/handback/F4UX_DONE.md` e aprovado com minors pelo Agent 5 em `docs/handback/F4UX_REVIEW.md`.
+
 Saída F4UX: `docs/handback/F4UX_DONE.md` + revisão Agent 5.
+
+### F4OPS — Vercel Preview / Staging + Performance Validation
+
+**Owner:** Agent 12.
+**Tempo estimado:** fase curta.
+
+F4OPS é uma fase operacional, não uma fase de motor.
+
+Entrega:
+
+- Validar o app em ambiente hospedado, preferencialmente Vercel Preview.
+- Definir fluxo branch → Preview Deploy → merge em `main` → Production.
+- Mapear env vars por ambiente (`Production`, `Preview`, `Development`) sem expor valores reais.
+- Validar build, login/auth, rotas principais e performance percebida fora do localhost.
+- Comparar Preview vs localhost para diagnosticar se a lentidão é ambiente local/dev server ou gargalo real.
+- Documentar gargalos e rollback.
+
+Forbidden F4OPS:
+
+- Não alterar motor, scoring, schema, migrations, collectors, sources ou prompts.
+- Não iniciar F4C/F5.
+- Não ativar cron Google Trends.
+- Não expor secrets.
+- Não usar Railway como primeira opção; Railway fica alternativa futura se houver blocker real na Vercel.
+
+Gates F4OPS:
+
+- [ ] Vercel Preview builda e abre em URL pública.
+- [ ] Login funciona.
+- [ ] Rotas principais do Funil e pelo menos uma rota Sistema/Admin carregam sem tela branca.
+- [ ] Não há erro crítico de console/server logs.
+- [ ] Performance percebida é comparada com localhost.
+- [ ] Cron GT continua desligado.
+- [ ] Motor/scoring/schema/sources permanecem intactos.
+
+Saída F4OPS: `docs/handback/F4OPS_DONE.md` + revisão Agent 5.
 
 ### F4C — Feedback estruturado + Idea/Brief gates
 
@@ -750,7 +788,7 @@ Gates F4C:
 - [ ] Aprovação/rejeição obriga reason_code (validação Zod).
 - [ ] 2 ciclos de feedback movem `opportunity_score` médio do top-10.
 
-Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somente após F4C aprovado. F4C só entra após F4UX aprovada.
+Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somente após F4C aprovado. F4C só entra após F4OPS aprovada ou skip explícito do operador.
 
 ---
 
