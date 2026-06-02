@@ -1,7 +1,7 @@
 # GoMVP V1 — PRD
 
 > **Versão:** 1.1 (rodada 7).
-> **Status:** decisões D-01 a D-18 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A aprovada com minors. Próximo gate: F4B (Google Trends / Agent 9).**
+> **Status:** decisões D-01 a D-19 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A e F4B aprovadas com minors. Próximo gate: F4UX (Funil UX / Operator Clarity).**
 > **Owner:** Built2Go (operador único).
 > **Última revisão:** rodada 7 + ajuste 2026-05-09 (cap IA D-16 = alvo operacional F4/F5 configurável por ENV/banco; sem backfill F4A; badge baixa confiança em qualified HN-only).
 
@@ -97,7 +97,7 @@ Operador único da Built2Go. Não é multi-tenant, não é produto público. **A
 ## 7. Fora de escopo
 
 - Scraping pesado, headless browser para sites externos, parsing de páginas sem API/RSS.
-- Reddit, YouTube em escala, Google Trends como dependência, App Store/Play Store reviews.
+- Reddit/YouTube em escala, Google Trends via endpoint web não oficial sem aprovação explícita, App Store/Play Store reviews.
 - App mobile nativo, extensão de browser, marketplace, multi-tenant, billing, white-label.
 - Treinamento de modelo / fine-tuning.
 - Validação automática de mercado, publicação de landing real, integrações com analytics/CRM/e-mail externos.
@@ -132,6 +132,8 @@ Todas via API/RSS oficial, sem scraping. Cada fonte segue o padrão `src/sources
 - Fontes que exigem login privado.
 
 **Manual / Watch:** `manual_inputs` e `watch_topics` são **inputs**, não fontes externas. Geram `evidence_type='manual_seed'` e **não contam** em Source Confidence externa.
+
+**Source adapter vs trigger:** cada fonte externa deve ser reutilizável pelo motor. Cron geral, `watch_topics` e `manual_inputs` podem acionar o mesmo adapter quando fizer sentido; Source Confidence só sobe quando o adapter grava evidence externa real no mesmo `topic_key`.
 
 ## 9. Fluxo funcional completo
 
@@ -215,11 +217,12 @@ flowchart TD
 - RF-28. **Source Confidence cap.** Manual e watch **não** elevam `source_confidence` externa. `distinct_external == 1 ⇒ source_confidence ≤ 0.40`.
 - RF-29. **Gates explícitos.** State machine com estados `trend_only | watch | weak_signal | pain_candidate | opportunity_candidate | qualified_opportunity | approved_opportunity | rejected | snoozed`. Categoria bloqueada/alto risco deve ir para `rejected` com `reason_codes` do vocabulário atual (principalmente `not_indielab_fit`, `regulatory_risk`, `good_trend_bad_opportunity` ou `evidence_insufficient`, conforme o caso). Toda transição registra em `feedback` quando a tabela polimórfica existir (F4C); em F4A, `opportunity_cards.reason_codes` deve preservar o motivo automático e `blacklist_tags` deve carregar a categoria exata.
 - RF-30. **Idea só nasce de `approved_opportunity`** (P-IDE-002, F4C). Pipeline legado P-IDE-001 continua existindo para histórico.
-- RF-31. **Brief só nasce de `idea_allowed`** (P-BRF-002, F4C). Brief legado P-BRF-001 continua existindo para histórico.
-- RF-32. **Feedback estruturado.** `feedback` polimórfico (`target_kind, target_id`) com `reason_code` obrigatório (vocabulário fechado §20).
-- RF-33. **Manual analysis on-demand.** Endpoint `/api/manual/analyze` autenticado, **fora do cron**, processa input avulso → evidence (`manual_seed`) → opportunity stub.
-- RF-34. **UI Funil** com rotas `/funil/{radar,watch-topics,manual,trends,need-clusters,opportunities,opportunities/[id],source-confidence,ideas,briefs,feedback-history}` (subset entrega em F4A; restante em F4C).
-- RF-35. **Sistema pode dizer "não há oportunidade".** `gate_state='trend_only'` é resposta válida; UI mostra essa categoria como pista de investigação, não como ideia gerada.
+- RF-31. **Source adapter reutilizável por trigger.** Integrações de fonte externa (começando por `gtrends` em F4B) devem normalizar para `evidences` e poder ser acionadas por cron geral, `watch_topics` e `manual_inputs` quando aplicável. Não criar abstração global prematura; repetir o padrão por fonte até haver duplicação real.
+- RF-32. **Brief só nasce de `idea_allowed`** (P-BRF-002, F4C). Brief legado P-BRF-001 continua existindo para histórico.
+- RF-33. **Feedback estruturado.** `feedback` polimórfico (`target_kind, target_id`) com `reason_code` obrigatório (vocabulário fechado §20).
+- RF-34. **Manual analysis on-demand.** Endpoint `/api/manual/analyze` autenticado, **fora do cron**, processa input avulso → evidence (`manual_seed`) → opportunity stub.
+- RF-35. **UI Funil** com rotas `/funil/{radar,watch-topics,manual,trends,need-clusters,opportunities,opportunities/[id],source-confidence,ideas,briefs,feedback-history}` (subset entrega em F4A; restante em F4C).
+- RF-36. **Sistema pode dizer "não há oportunidade".** `gate_state='trend_only'` é resposta válida; UI mostra essa categoria como pista de investigação, não como ideia gerada.
 
 ## 11. Requisitos não funcionais
 
@@ -255,7 +258,7 @@ flowchart TD
 
 Premissa: ~500 itens/coleta × 2 coletas/semana ≈ 4k itens/mês.
 
-- Coletas: US$ 0 (APIs públicas, incluindo Trends em F4B).
+- Coletas: US$ 0 para HN. Em F4B, Google Trends deve priorizar BigQuery public dataset quando viável; custo BigQuery/API deve ser estimado e documentado antes da implementação (free tier/cotas podem aplicar, mas não assumir custo zero sem evidência).
 - **F1**: US$ 0 — sem IA.
 - **F2 (legado, em produção)**:
   - Embeddings: ~US$ 0,02/mês.
@@ -267,7 +270,7 @@ Premissa: ~500 itens/coleta × 2 coletas/semana ≈ 4k itens/mês.
   - P-EVI-001 (extração de evidência sobre signals legados): ~US$ 0,2/mês.
   - P-OPP-001 (avaliação de opportunity): ~US$ 0,4/mês.
   - P-TRD-001 (resumo de trend): ~US$ 0,1/mês.
-- **F4B (Trends)**: API gratuita; embeddings adicionais ≤ US$ 0,02/mês.
+- **F4B (Trends)**: sem IA paga para coleta; custo BigQuery/API deve ser estimado no approval-first; embeddings adicionais ≤ US$ 0,02/mês no cenário esperado.
 - **F4C**:
   - P-IDE-002 sob demanda: ~US$ 0,2/mês.
   - P-BRF-002 sob demanda: ~US$ 0,1/mês.
@@ -595,7 +598,8 @@ flowchart LR
     F2 --> F3["F3 Painel + Ações"]
     F3 --> F4A["F4A Motor + Evidence + Opportunities (HN-only)"]
     F4A --> F4B["F4B Cross-source com Google Trends"]
-    F4B --> F4C["F4C Feedback estruturado + Idea/Brief gates"]
+    F4B --> F4UX["F4UX Funil UX / Operator Clarity"]
+    F4UX --> F4C["F4C Feedback estruturado + Idea/Brief gates"]
     F4C --> F5A["F5A Product Hunt"]
     F5A --> F5B["F5B Reddit"]
     F5B --> F5C["F5C YouTube"]
@@ -603,7 +607,7 @@ flowchart LR
     F5D --> F6["F6 Hardening (kill switch, alertas, retenção, RUNBOOK)"]
 ```
 
-**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A entregue e aprovada com minors. Próximo gate: F4B / Agent 9.
+**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A e F4B entregues e aprovadas com minors. Próximo gate: F4UX / Agent 10.
 
 - **F0 Fundação (1–2 dias)**: repo, Next.js 15, Supabase + pgvector, Drizzle, Auth, `runs`/`ai_usage_logs`/`cost_budgets`, `AIProvider`+`OpenAIProvider`, `assertBudget`, deploy mínimo. **Vercel Cron configurado vazio**.
 - **F1 Coleta + Storage (3–5 dias) — sem IA, sem embeddings, sem custo IA. Entrega visual: "Coleta / Raw Items / Candidatos" (não há `signals` ainda)**:
@@ -632,8 +636,9 @@ flowchart LR
   - **Coletores adicionais** (Product Hunt, RSS, Apple RSS, Stack Exchange, manual) **entram um por vez sob aprovação**, depois que HN estiver estável de ponta-a-ponta. Não implementar todos de uma vez.
 - **F3 Painel + Ações (3–4 dias)** — DONE.
 - **F4A Motor Base / Evidence Layer (5–7 dias)** — DONE (`approved_with_minors`). Owner: Agent 8 + Agent 8.5 fix ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md)). Motor source-agnostic + adapter `signals → evidences` + tabelas novas + scoring multi-axis + state machine + UI Funil mínima. HN-only. Source Confidence ≤ 0.40 por design.
-- **F4B Cross-source com Google Trends (4–6 dias)** — Owner: Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). Trends como segunda fonte mínima. `search_momentum`. Source Confidence pode subir para ≥ 0.65.
-- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 10 ([`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md)). Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
+- **F4B Cross-source com Google Trends (4–6 dias)** — DONE (`approved_with_minors`). Owner: Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). Trends como segunda fonte mínima. `search_momentum`. Adapter reutilizável por cron geral, `watch_topics` e `manual_inputs`. Source Confidence pode subir para ≥ 0.65 quando há evidence externa distinta no mesmo `topic_key`; não houve overlap real GT+HN nos dados atuais, sem bloquear a fase.
+- **F4UX Funil UX / Operator Clarity (curta)** — Owner: Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). Clareza operacional do Funil antes de feedback: navegação orientada pelo MOTOR, auditabilidade de evidences, Evidence Trace, estados vazios, baixa confiança, ausência de overlap e próximos passos operacionais. Não altera motor/scoring/schema/cron.
+- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 11 ([`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md)). Entra após F4UX. Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
 - **F5A..F5D Source Expansion (incremental)** — ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Ordem: PH > Reddit > YouTube > Reviews. Cada fonte um sprint (~3-8 dias) sob aprovação caso a caso.
 - **F6 Hardening (2–3 dias)** — kill switch E2E, retries, alertas, retenção LGPD + purge, RUNBOOK, backup.
 
@@ -646,7 +651,8 @@ Total estimado V2: F4A+B+C ~3-4 semanas; F5 incremental conforme demanda; F6 ao 
 - **F2**: ≥ 20 ideias/execução em JSON válido; threshold orçamento bloqueia em teste; `ai_usage_logs` populando. — DONE.
 - **F3**: 30 ideias revisadas em ≤ 30 min (KPI 30); aba Filtradas mostra motivos. — DONE.
 - **F4A**: DONE (`approved_with_minors`). Validação **estrutural HN-only**, não validação de mercado. Adapter `signals → evidences` processa **apenas sinais novos** (sem backfill) e adapta corretamente os elegíveis; se houver menos de 10 sinais novos, isso é **dados insuficientes**, não falha do motor. Fixture/dev seed valida lote sem inventar dados reais. Gate mínimo validado: evidence válida → `need_cluster` → `opportunity_card`; `source_confidence ≤ 0.40` em 100% das opportunities HN-only; UI exibe **Baixa confiança de fonte** quando aplicável; motor **rejeita** opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` e não a promove para `opportunity_candidate`; `test:opportunity-gate` e `test:opportunity-blacklist` encerram corretamente; manual analysis E2E ok dentro do escopo F4A; F3 legado intacto. **`qualified_opportunity` não é obrigatório em F4A.**
-- **F4B**: ≥ 1 opportunity_card com `source_confidence ≥ 0.65` (HN + GT); demonstração `trend_only` e `pain_candidate` corretos; custo Trends US$ 0.
+- **F4B**: DONE (`approved_with_minors`). Pelo menos 1 evidence `search_momentum` de `gtrends` persistida e visível no evidence trace; BigQuery-first com SDK oficial; sem scraping/provider pago; endpoint protegido por `CRON_SECRET`; cron operacional desligado; sem overlap real GT+HN nos dados atuais, portanto `source_confidence ≥ 0.65` não demonstrado por falta de match, sem reprovar automaticamente.
+- **F4UX**: Funil organizado pelo fluxo do MOTOR, não por source; operador consegue entender o que foi encontrado, quais evidences existem, origem/source de cada evidence, overlap/ausência de overlap, baixa confiança, rejeições/filtros e próximo passo operacional; sem alterar motor/scoring/schema/cron.
 - **F4C**: idea só nasce com `opportunity_id NOT NULL` em rota nova; brief só nasce com `idea_allowed`; reason_code obrigatório validado; backfill `feedback` legado sem perda de dados.
 - **F5x** (cada fonte): ≥ 30 evidences/dia por 3 dias seguidos; ≥ 1 opportunity sobe `source_confidence` para próxima faixa; nenhuma alteração no motor.
 - **F6**: kill switch testado no **cap vigente** configurado (na validação F4/F5, cenário típico US$ 5/mês); alerta chega; purge LGPD limpa janela; backup restaura em sandbox.
@@ -681,6 +687,8 @@ Restaram apenas pontos menores que não bloqueiam F0:
 - **D-15** **Gates explícitos + reason codes.** State machine em `opportunity_cards.gate_state` + `reason_code` obrigatório em feedback (vocabulário fechado). Idea só de `approved_opportunity`, brief só de `idea_allowed`. _Aprovado rodada 7._
 - **D-16** **Cap operacional de IA na validação F4/F5 (substitui D-08 como alvo vigente).** Alvo típico **US$ 5/mês** durante validação do motor; valor efetivo **sempre configurável** via ENV e `cost_budgets.monthly_budget_usd` — não é regra eterna hardcoded. Thresholds 0.80/0.90/1.00 sobre o budget vigente. _Aprovado rodada 7; ajuste operador 2026-05-09._
 - **D-17** **Nova ordem de fontes em F5: PH > Reddit > YouTube > Reviews.** Substitui ordem do PRD V1 §8. RSS/Apple/Stack Exchange ficam como backup sem prioridade. _Aprovado rodada 7._
+- **D-18** **Gate oficial F4A é estrutural.** F4A HN-only não exige `qualified_opportunity` nem volume real mínimo absoluto; valida estrutura do motor, adapter e bloqueios de risco. _Aprovado 2026-05-28._
+- **D-19** **F4UX antes de F4C.** Inserir fase curta de clareza operacional do Funil antes de feedback/ideias/briefs; navegação orientada pelo MOTOR, não por source. _Aprovado 2026-06-01._
 
 Nenhuma decisão crítica em aberto.
 
@@ -688,7 +696,7 @@ Nenhuma decisão crítica em aberto.
 
 ## Apêndice A — Resumo executivo
 
-GoMVP V1 é um radar automático que coleta sinais B2C de PH, HN, RSS, Apple RSS e Stack Exchange via API/RSS, deduplica de forma determinística, aplica blacklist obrigatória, extrai dores com IA, agrupa por similaridade vetorial, gera até 30 ideias rankeadas 2x/semana com evidência clicável, e permite ao operador único da Built2Go aprovar/rejeitar/promissora/snooze. Apenas ideias aprovadas geram brief de MVP. Custo IA é hard-capped em US$ 50/mês com kill switch. Stack: Next.js 15 + Supabase + Drizzle + OpenAI. Vercel Cron orquestra. Sem scraping, sem mobile nativo, sem treino de modelo.
+GoMVP V1 é um motor interno de oportunidades B2C. Ele coleta sinais públicos por fontes aprovadas, normaliza tudo em `evidences`, agrupa dores em `need_clusters`, gera `opportunity_cards` com scoring multi-axis e só permite gerar ideia após aprovação de opportunity. O pipeline legado de ideias continua preservado, mas o valor central agora é a oportunidade. Custo de IA é controlado por ENV + `cost_budgets`; durante validação F4/F5 o alvo operacional típico é US$ 5/mês. Stack: Next.js 15 + Supabase + Drizzle + OpenAI. Vercel Cron orquestra automações aprovadas. Sem scraping, sem mobile nativo, sem treino de modelo.
 
 ## Apêndice B — Tarefas técnicas por fase
 

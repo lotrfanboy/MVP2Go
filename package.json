@@ -18,12 +18,15 @@
     "test:budget": "tsx scripts/test-budget.ts",
     "test:budget:live": "tsx scripts/test-budget-live.ts",
     "test:opportunity-gate": "tsx scripts/test-opportunity-gate.ts",
-    "test:opportunity-blacklist": "tsx scripts/test-opportunity-blacklist.ts"
+    "test:opportunity-blacklist": "tsx scripts/test-opportunity-blacklist.ts",
+    "test:gtrends-normalizer": "tsx scripts/test-gtrends-normalizer.ts",
+    "test:gtrends-overlap": "tsx scripts/test-gtrends-overlap.ts"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^8.3.1",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/ssr": "^0.10.2",

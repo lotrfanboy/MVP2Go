@@ -15,12 +15,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Current phase** | F4B — Cross-source Google Trends (próximo gate). |
-| **Last completed phase** | F4A — Opportunity Motor / Evidence Layer, aprovado com minors após correção Agent 8.5 |
-| **Active agent** | Agent 9 (próximo) — F4B Cross-source Google Trends |
-| **Last reviewer agent** | Agent 5 — revisou F4A fix como `approved_with_minors` em [`handback/F4A_FIX_REVIEW.md`](handback/F4A_FIX_REVIEW.md). |
+| **Current phase** | F4UX — Funil UX / Operator Clarity (próximo gate intermediário antes de F4C). |
+| **Last completed phase** | F4B — Cross-source Google Trends, aprovado com minors após review Agent 5 |
+| **Active agent** | Agent 10 (próximo) — F4UX Funil UX / Operator Clarity |
+| **Last reviewer agent** | Agent 5 — revisou F4B como `approved_with_minors` em [`handback/F4B_REVIEW.md`](handback/F4B_REVIEW.md). |
 | **Current branch** | `main` |
-| **Last updated** | 2026-05-29 (F4A approved_with_minors; próximo F4B) |
+| **Last updated** | 2026-06-01 (F4B approved_with_minors; F4UX inserida antes de F4C) |
 
 ## Status por fase
 
@@ -31,8 +31,9 @@
 | F2 — IA + Ideias (legado) | [`agents/AGENT_4_F2_IA_IDEIAS.md`](agents/AGENT_4_F2_IA_IDEIAS.md) | [`handback/F2_DONE.md`](handback/F2_DONE.md) | [`handback/F2_REVIEW.md`](handback/F2_REVIEW.md) | DONE (`approved_with_minors`) |
 | F3 — Painel + Ações | Agent 6 ([`agents/AGENT_6_F3_UI.md`](agents/AGENT_6_F3_UI.md)) | [`handback/F3_DONE.md`](handback/F3_DONE.md) + [`handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | [`handback/F3_REVIEW.md`](handback/F3_REVIEW.md) + [`handback/F3_QA_REVIEW_BY_AGENT5.md`](handback/F3_QA_REVIEW_BY_AGENT5.md) | DONE (`approved_with_minors`) |
 | **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) + fix [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) | [`handback/F4A_DONE.md`](handback/F4A_DONE.md) + [`handback/F4A_FIX_DONE.md`](handback/F4A_FIX_DONE.md) | [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md) + [`handback/F4A_FIX_REVIEW.md`](handback/F4A_FIX_REVIEW.md) | DONE (`approved_with_minors`) |
-| **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | — | — | READY TO START |
-| **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md) | — | — | PENDING (após F4B) |
+| **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | [`handback/F4B_DONE.md`](handback/F4B_DONE.md) + checkpoints GT | [`handback/F4B_REVIEW.md`](handback/F4B_REVIEW.md) | DONE (`approved_with_minors`) |
+| **F4UX — Funil UX / Operator Clarity** | [`agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md) | — | — | READY TO START |
+| **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md) | — | — | PENDING (após F4UX) |
 | F5A — Product Hunt | a definir | — | — | PENDING (após F4C) |
 | F5B — Reddit | a definir | — | — | PENDING |
 | F5C — YouTube | a definir | — | — | PENDING |
@@ -114,22 +115,23 @@ Evidência cruzada com handbacks e arquivos no repositório:
 **Redesign F4/F5** entregue pelo Agent 0 nesta rodada (2026-05-06):
 
 - Nova pasta `docs/architecture/` criada com `F4_OPPORTUNITY_MOTOR.md` e `F5_SOURCE_EXPANSION.md`.
-- 3 novos briefs de implementação: `agents/AGENT_8_F4A_MOTOR.md`, `agents/AGENT_9_F4B_TRENDS.md`, `agents/AGENT_10_F4C_FEEDBACK.md`.
+- Briefs de implementação F4: `agents/AGENT_8_F4A_MOTOR.md`, `agents/AGENT_9_F4B_TRENDS.md`, `agents/AGENT_11_F4C_FEEDBACK.md`; F4UX adiciona `agents/AGENT_10_F4UX_FUNNEL_UI.md`.
 - PRD atualizado para rodada 7 (visão idea→opportunity, fluxo evidence layer, scoring multi-axis, KPI custo IA US$ 5/mês, plano F4A/B/C + F5 source expansion + F6 hardening).
-- DECISIONS atualizado com **D-11..D-17** (mudança de visão, evidence layer, scoring multi-axis, cross-source obrigatório, gates+reasons, cap US$ 5, nova ordem de fontes). **D-08 substituída** por D-16. **O-01 encerrada**.
+- DECISIONS atualizado com **D-11..D-19** e princípios **DP-15..DP-23** (opportunity-first, evidence layer, scoring multi-axis, cross-source obrigatório, gates+reasons, cap configurável, nova ordem de fontes, F4A estrutural, source adapter ≠ trigger e navegação orientada pelo MOTOR). **D-08 substituída** por D-16. **O-01 encerrada**.
 - IMPLEMENTATION_PLAN reescrito com fases novas.
-- AGENTS.md atualizado com Agent 8/9/10.
+- AGENTS.md atualizado com Agent 8/9/10/11.
 - Handback do redesign em `handback/AGENT_0_F4_REDESIGN.md`.
 
 **Próximo gate:**
 
 1. ~~F4A implementada e corrigida.~~ **Aprovada com minors** após Agent 8.5 + review Agent 5.
-2. Ativar **Agent 9 / F4B** em chat dedicado, usando [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
-3. F4B deve validar cross-source confidence com Google Trends, sem alterar schema do motor e sem iniciar F4C/F5.
+2. ~~F4B implementada e revisada.~~ **Aprovada com minors** após Agent 9 + review Agent 5.
+3. Ativar **Agent 10 / F4UX** em chat dedicado, usando [`agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md).
+4. F4UX deve melhorar clareza operacional do funil e auditabilidade genérica de evidences, sem mexer em motor/scoring/schema/cron e sem iniciar F4C/F5.
 
 ## Reviews pendentes
 
-Nenhuma review pendente. Próxima review: F4B após `F4B_DONE.md` do Agent 9.
+Nenhuma review pendente. Próxima review: F4UX após handback do Agent 10.
 
 ## Blockers conhecidos
 
@@ -140,7 +142,8 @@ Nenhuma review pendente. Próxima review: F4B após `F4B_DONE.md` do Agent 9.
 - **B-05** — ~~Mudanças da F3 ainda não commitadas em git.~~ **Resolvido** em 2026-05-06 (`713d773`, `d2dc898`, push em `origin/main`).
 - **B-06** — ~~PRD §3 alterado fora do escopo permitido (US$ 50→5).~~ **Resolvido** em 2026-05-06 (KPI restaurado para US$ 50). **Reaberto e re-resolvido** via **D-16**: teto de IA como **cap operacional configurável** (ENV + `cost_budgets`); **alvo típico** na validação F4/F5 do motor **US$ 5/mês** — não constante hardcoded no produto.
 - **B-07** — ~~Rodada 7 do PRD ainda não commitada em git.~~ **Resolvido**: documentação rodada 7 commitada/pushada antes de iniciar Agent 8.
-- **B-08** — ~~F4A rejected / gate oficial precisava ajuste.~~ **Resolvido** por D-18 + Agent 8.5: F4A aprovada com minors; próximo gate é F4B.
+- **B-08** — ~~F4A rejected / gate oficial precisava ajuste.~~ **Resolvido** por D-18 + Agent 8.5: F4A aprovada com minors; F4B também já foi concluída.
+- **B-09** — ~~F4B dependia de Google Trends como segunda fonte mínima.~~ **Resolvido** por Agent 9 + review Agent 5: F4B aprovada com minors; `source_confidence >= 0.65` não foi demonstrado por falta de overlap real GT+HN, mas isso é meta operacional, não blocker absoluto.
 
 ## Riscos conhecidos
 
@@ -157,26 +160,30 @@ Nenhuma review pendente. Próxima review: F4B após `F4B_DONE.md` do Agent 9.
 - **R-11** **Reversão de filtrada via override** — `feedback.action='unfilter_override'` mantém `blacklist_tags` intacta; override de exibição.
 - **R-12** **Confusão entre `signals` e `evidences`** — alta criticidade. Mitigado por glossário em [`F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md) §18, badge `LEGADO` na UI antiga, e DP-16 (decisão dura: nunca renomear ou substituir).
 - **R-13** **Source Confidence inflada** — mitigado por cap automático no motor (`distinct_external==1 ⇒ ≤0.40`) e exclusão de manual/watch da contagem (D-14, RF-28).
-- **R-14** **Custo IA explodir em F4B com Trends** — mitigado por `assertBudget()` + cap **vigente** (ENV/`cost_budgets`; alvo típico validação F4/F5 US$ 5 — D-16) + obrigação do Agent 9 medir antes de subir produção.
+- **R-14** **Custo/configuração de Google Trends em F4B** — mitigado por approval-first do Agent 9: BigQuery public dataset como caminho preferencial, estimativa de custo BigQuery/API antes de editar, `assertBudget()` para IA, cap **vigente** (ENV/`cost_budgets`; alvo típico validação F4/F5 US$ 5 — D-16) e escalonamento se lookup arbitrário exigir provider pago/não aprovado.
 - **R-15** **Schema F4A grande** — mitigado por migration única, idempotente, exibida em SQL (DP-02). Sem `DROP`. Apenas `CREATE` + `ALTER ADD COLUMN nullable`.
 - **R-16** **Pipeline legado quebrar com adapter `signals → evidences`** — mitigado por executar adapter no mesmo handler de `extract` (sucesso/falha conjunto).
-- **R-17** **Reabertura de PRD** — feita conscientemente nesta rodada com decisões D-11..D-17 explícitas. Toda mudança nominalmente justificada.
+- **R-17** **Reabertura de PRD** — feita conscientemente nesta rodada com decisões D-11..D-19 e DP-23 explícitas. Toda mudança nominalmente justificada.
+- **R-18** **F4B sem overlap real GT+HN** — aceito como minor em `F4B_REVIEW.md`: BigQuery Top/Rising inseriu `gtrends:search_momentum`, mas não cruzou com HN/need clusters atuais. Não falsear dados; `source_confidence >= 0.65` fica dependente de dados/match futuro.
+- **R-19** **Cron Google Trends desligado** — decisão prudente: `/api/cron/collect-trends` existe e é protegido por `CRON_SECRET`, mas não está em `vercel.json` até decisão operacional sobre custo/cadência/caps.
+- **R-20** **Funil operacional confuso antes de feedback** — mitigação: inserir F4UX antes da F4C para clareza de navegação, evidences, overlap, baixa confiança e próximos passos operacionais.
 
 ## Próxima ação recomendada
 
-1. Operador ativa Agent 9 em chat dedicado com [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
-2. Agent 9 executa F4B (Google Trends como segunda fonte mínima) sem mexer no schema do motor e sem iniciar F4C/F5.
-3. Agent 9 entrega `docs/handback/F4B_DONE.md`.
-4. Agent 5 revisa F4B.
-5. Após F4B approved → ativar Agent 10 (F4C).
+1. Operador ativa Agent 10 em chat dedicado com [`agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md).
+2. Agent 10 executa F4UX: clareza operacional do funil, navegação orientada pelo MOTOR e auditabilidade genérica da evidence layer.
+3. Agent 10 entrega handback F4UX.
+4. Agent 5 revisa F4UX.
+5. Após F4UX approved/approved_with_minors → ativar Agent 11 (F4C).
 6. F4 fecha após F4C `approved`. Daí F5A.
 
 ## Do Not Do Yet
 
 Bloqueios duros até nova aprovação:
 
-- Nenhuma fase futura adiantada além do gate atual F4B (F4C, F5x, F6 só nas suas vezes).
-- Nenhuma fonte nova além de Google Trends no escopo F4B.
+- Nenhuma fase futura adiantada além do gate atual F4UX (F4C, F5x, F6 só nas suas vezes).
+- Nenhuma fonte nova além das já implementadas; F4UX não cria collectors nem integrações.
+- Não ativar cron Google Trends em `vercel.json` até decisão operacional explícita.
 - Nenhuma migration nova sem SQL preview + **aprovação humana explícita e específica daquela migration** (Q-G).
 - Nenhuma alteração em prompts `001` já em produção (P-EXT/P-FIL/P-CLU/P-IDE/P-BRF). Para mudar, criar versão `002`. P-EVI/P-TRD/P-OPP/P-IDE-002/P-BRF-002 entram como **arquivos novos** versão `001`.
 - Nenhuma chamada IA fora dos pipelines existentes que ignore `assertBudget()`.
@@ -191,7 +198,8 @@ Bloqueios duros até nova aprovação:
 - OQ-01..OQ-08 — fechadas em rodadas anteriores.
 - OQ-09 — ~~Snooze sem `snoozed_until`.~~ **Endereçado em F4A** via `opportunity_cards.snoozed_until` para o funil; legado mantém comportamento atual.
 - OQ-10 — ~~**Backfill retroativo `signals → evidences` em F4A?**~~ **Fechada (operador 2026-05-09):** F4A processa **apenas sinais novos**; **sem** backfill retroativo. Backfill futuro = job manual opcional com dry-run e **aprovação separada** (ver [`AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), RF-24).
-- OQ-11 — **Cadência de `/api/cron/collect-trends` em F4B**: piggyback em seg/qui (15:00 entre `collect-hn` e `extract`) ou cron separado? Decisão fica para Agent 9 propor com base em rate limit Trends.
+- OQ-11 — **Cadência de `/api/cron/collect-trends`**: F4B manteve cron GT desligado. Decisão futura: ativar ou não em `vercel.json`, com qual cadência e cap BigQuery.
+- OQ-14 — **Lookup de tópico arbitrário em Trends**: BigQuery public dataset cobre apenas Top/Rising. Provider alternativo oficial/pago só entra com aprovação futura específica; F4UX/F4C não devem reabrir isso.
 - OQ-12 — **Quando `/coleta` legada some?** Mantida em F4A. Considerar deprecar em F5+ se redundante com `/funil/manual` + `/funil/source-confidence`.
 - OQ-13 — **F4A inclui badge `LEGADO` em quais telas exatamente?** Sugestão Agent 0: Dashboard, Ranking, Filtradas, Detalhe da Ideia, Brief MVP, Sinais, Clusters. Não em Custos, Configurações, Fontes, Pesos, Blacklist, Prompts (são compartilhadas legado+novo). Confirmar em F4A.
 

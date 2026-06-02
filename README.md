@@ -3,7 +3,7 @@
 Motor interno de oportunidades B2C da Built2Go.
 Coleta sinais públicos, normaliza evidências (`evidences`), agrupa dores em `need_clusters`, gera `opportunity_cards` com scoring multi-axis e só permite ideias/briefs após gates humanos.
 
-> **Status atual:** F0/F1/F2/F3 concluídas. **F4A (Opportunity Motor HN-only) aprovada com minors**; próximo gate é **F4B / Agent 9 (Google Trends para cross-source confidence)**. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
+> **Status atual:** F0/F1/F2/F3 concluídas. **F4A e F4B aprovadas com minors**; próximo gate é **F4UX / Agent 10 (clareza operacional do Funil antes da F4C)**. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
 
 ## Stack
 
@@ -79,6 +79,8 @@ Use uma conta criada no Supabase Auth (Authentication → Users → Add user →
 | `npm run test:budget` | Valida thresholds 0.80/0.90/1.00 do `assertBudget()`. |
 | `npm run test:opportunity-gate` | Valida state machine F4A. |
 | `npm run test:opportunity-blacklist` | Valida blacklist persistida no motor F4A. |
+| `npm run test:gtrends-normalizer` | Valida normalização `gtrends:search_momentum` e lookup arbitrário unsupported. |
+| `npm run test:gtrends-overlap` | Diagnostica overlap entre `gtrends`, HN, `need_clusters`, `watch_topics` e opportunities. |
 
 ## Estrutura
 

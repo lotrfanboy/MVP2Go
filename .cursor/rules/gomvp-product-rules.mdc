@@ -37,12 +37,14 @@ Canonical decisions: [`docs/DECISIONS.md`](mdc:docs/DECISIONS.md).
 - **Source-agnostic motor** (DP-15): `src/motor/*` never imports anything specific to a source. It works only over `evidences`.
 - **`signals` and `evidences` are distinct layers** (DP-16): never rename one into the other; never substitute. `signals` (F2 legacy) stays intact and becomes **one** of the sources of evidence via adapter `signals → evidences`.
 - **Manual seeds and watch topics never raise external Source Confidence** (DP-17, D-14). They are seeds, not market proof.
+- **Source adapter ≠ trigger** (DP-22): external source adapters produce `evidences`; cron, watch topics and manual inputs are triggers/seeds that may invoke adapters but do not count as external sources themselves.
+- **Navigation follows the MOTOR, not sources** (DP-23, D-19): main product flow is Radar → Evidences → Trends → Need Clusters → Opportunities → Ideas → Briefs. Sources are evidence infrastructure, not product menus.
 - **Pain weighs more than trend** in `opportunity_score`.
 - **Idea only from `approved_opportunity`. Brief only from `idea_allowed`** (DP-18, D-15).
 - Reason code is **mandatory** in any gate transition on opportunities/ideas (DP-20).
 - Do not overengineer.
 
-## V2 scope (current — F4A in queue)
+## V2 scope (current — F4UX in queue)
 
 Core flow:
 
@@ -59,7 +61,8 @@ Core flow:
 ## Source priorities
 
 **In production:** Hacker News (Algolia HN Search API).
-**Next gate (F4B):** Google Trends — second minimal source for cross-source confidence.
+**Implemented in F4B:** Google Trends — second minimal source for cross-source confidence. F4B is `approved_with_minors`; no real GT+HN overlap appeared, `source_confidence >= 0.65` was not demonstrated, and GT cron remains off until explicit operational approval.
+**Next gate (F4UX):** Funil UX / Operator Clarity — make the MOTOR flow operationally clear before F4C feedback/ideas/briefs. Do not start F4C until F4UX is approved.
 **F5 roadmap (D-17):** Product Hunt > Reddit > YouTube > Reviews. One source at a time, under approval, following the `src/sources/<source>/{README, collector, normalizer}` pattern.
 **Backup (no priority):** RSS feeds, Apple RSS, Stack Exchange — only on concrete demand.
 
@@ -68,6 +71,7 @@ Forbidden permanently:
 - Google Play / App Store reviews via scraping.
 - Sources requiring private login.
 - Manual entry counted as external source for Source Confidence.
+- Watch topics counted as external source for Source Confidence.
 
 ## Required opportunity output
 
@@ -162,6 +166,7 @@ When coding:
 - Prefer Postgres with pgvector for embeddings/similarity.
 - Keep the architecture modular but simple.
 - Avoid premature abstractions (only `AIProvider` and `src/motor/*` source-agnostic core are required abstractions).
+- Do not create a generic `SourceProvider` abstraction yet. Implement source adapters with reusable internal functions first; abstract only after repeated patterns across 2-3 sources.
 - Log all collector runs and AI operations (`runs`, `ai_usage_logs`).
 - Keep prompts versioned. To change a prompt in production, create a new version (002, 003, ...). Never edit a version already used.
 - Keep scoring weights configurable in `weights`. Legacy weights kept; new F4 weights use `f4_*` prefix.
@@ -177,6 +182,8 @@ When coding:
 - **Never rename or substitute `signals` for `evidences`** (DP-16).
 - **Never desligar pipeline F2 legacy** (`runIdeaGeneration`, P-IDE-001, P-BRF-001) without explicit operator decision.
 - **Never let manual/watch raise external Source Confidence** (DP-17).
+- **Never couple a new source only to cron** when watch/manual enrichment is part of the source plan; keep adapter code reusable while avoiding a premature global source framework (DP-22).
+- **Never create primary navigation menus per source** (Google Trends, Product Hunt, Reddit, YouTube, Reviews). Use generic evidence/source-confidence/source-health surfaces instead, and keep the main Funil organized by MOTOR stages (DP-23).
 
 ## Decision rule
 

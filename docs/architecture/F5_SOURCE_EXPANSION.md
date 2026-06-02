@@ -35,7 +35,7 @@ V2 (este roadmap) reordena:
 | 6 | **Reviews (F5D)** | `competitor_weakness`. Mais delicado em LGPD/marca. |
 | backup | **RSS / Apple RSS / Stack Exchange** | Mantidos como fontes auxiliares possíveis, sem prioridade em V2. Implementar somente se motor pedir mais cobertura ou operador solicitar. |
 
-> Esta reordenação é **D-15** em [`DECISIONS.md`](../DECISIONS.md). PRD §8 será atualizado na rodada 7 do PRD para refletir a ordem.
+> Esta reordenação é **D-17** em [`DECISIONS.md`](../DECISIONS.md). PRD §8 foi atualizado na rodada 7 do PRD para refletir a ordem.
 
 ---
 
@@ -53,6 +53,28 @@ src/sources/<source>/
 src/app/api/cron/
 └── collect-<source>/route.ts  # protegido por CRON_SECRET; segue padrão F1
 ```
+
+### 2.1 Source adapter vs trigger
+
+Cada source adapter deve ser reutilizável pelo motor e não acoplado a um único trigger:
+
+- **Source adapter:** sabe falar com a fonte externa e normalizar resposta em `evidences`.
+- **Triggers:** cron geral, `watch_topics` e `manual_inputs` podem acionar a mesma fonte quando fizer sentido.
+
+Padrão leve esperado, sem criar framework genérico prematuro:
+
+```ts
+collect<Source>Discovery(...)
+lookup<Source>Topic(...)
+normalize<Source>Evidence(...)
+```
+
+Regras:
+
+- `watch_topics` e `manual_inputs` são seeds internas; nunca contam como fonte externa.
+- Source Confidence só sobe quando o adapter grava evidence real com `source_key` externo no mesmo `topic_key`.
+- Se uma fonte não suportar lookup de tópico arbitrário, o agente deve documentar a limitação e pedir decisão do operador, não simular validação.
+- Não criar uma abstração global `SourceProvider` até pelo menos 2-3 sources repetirem o mesmo padrão.
 
 E entrega:
 

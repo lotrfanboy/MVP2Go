@@ -1,8 +1,8 @@
-# Agent 10 — F4C Feedback estruturado + Idea/Brief gates
+# Agent 11 — F4C Feedback estruturado + Idea/Brief gates
 
 > **Tipo de agente:** implementador de fase.
 > **Fase:** F4C — Feedback estruturado por nível + gates `idea_allowed` / `brief_allowed`.
-> **Pré-requisito:** F4A e F4B fechadas (`approved_with_minors` ou melhor) pelo Agent 5.
+> **Pré-requisito:** F4A, F4B e F4UX fechadas (`approved_with_minors` ou melhor) pelo Agent 5.
 > **Owner do brief:** Agent 0.
 > **Reviewer requerido ao final:** Agent 5.
 
@@ -10,14 +10,14 @@
 
 ## 0. Antes de qualquer coisa
 
-Você é o Agent 10. Antes de tocar uma linha:
+Você é o Agent 11. Antes de tocar uma linha:
 
 1. **Leia obrigatoriamente, em ordem:**
    - [`docs/PRD.md`](../PRD.md) (rodada 7).
    - [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](../architecture/F4_OPPORTUNITY_MOTOR.md) (§10 e §13).
    - [`docs/IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) (seção F4C).
-   - [`docs/agents/AGENT_8_F4A_MOTOR.md`](AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_9_F4B_TRENDS.md`](AGENT_9_F4B_TRENDS.md).
-   - [`docs/handback/F4A_DONE.md`](../handback/F4A_DONE.md), [`docs/handback/F4B_DONE.md`](../handback/F4B_DONE.md) e respectivos reviews.
+   - [`docs/agents/AGENT_8_F4A_MOTOR.md`](AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_9_F4B_TRENDS.md`](AGENT_9_F4B_TRENDS.md), [`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](AGENT_10_F4UX_FUNNEL_UI.md).
+   - [`docs/handback/F4A_DONE.md`](../handback/F4A_DONE.md), [`docs/handback/F4B_DONE.md`](../handback/F4B_DONE.md), [`docs/handback/F4B_REVIEW.md`](../handback/F4B_REVIEW.md), [`docs/handback/F4UX_DONE.md`](../handback/F4UX_DONE.md) e respectivos reviews.
    - [`docs/PROJECT_STATE.md`](../PROJECT_STATE.md), [`docs/DECISIONS.md`](../DECISIONS.md), [`docs/AGENTS.md`](../AGENTS.md).
    - [`.cursor/rules/gomvp-product-rules.mdc`](../../.cursor/rules/gomvp-product-rules.mdc).
 
@@ -34,6 +34,8 @@ Você é o Agent 10. Antes de tocar uma linha:
 Implementar **F4C** conforme `docs/architecture/F4_OPPORTUNITY_MOTOR.md` §13 (F4C).
 
 Em uma frase: **transformar `feedback` em estrutura polimórfica com reason codes, implementar gates `idea_allowed` e `brief_allowed`, criar prompts P-IDE-002 e P-BRF-002, e fechar a regra "ideia só de opportunity aprovada, brief só de idea aprovada".**
+
+Nota de contexto: F4B foi aprovada com minors sem overlap real GT+HN e com cron Google Trends desligado. Isso **não** é pré-requisito bloqueante da F4C. Agent 11 não deve reabrir F4B, ativar cron GT, alterar source confidence ou criar trabalho de source/matching. A F4UX existe justamente para clarear o funil antes do feedback.
 
 ---
 

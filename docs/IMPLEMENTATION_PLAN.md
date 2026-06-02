@@ -1,7 +1,7 @@
 # GoMVP V1 — Implementation Plan
 
 > **Versão:** 1.1 (rodada 7 do PRD).
-> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4 redesenhada como F4A/B/C (motor de oportunidades)** e **F5 redesenhada como Source Expansion (PH > Reddit > YouTube > Reviews)**. Hardening migra para F6. Próximo gate: F4A (sob aprovação). Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
+> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4A e F4B concluídas (`approved_with_minors`)**. F4UX entra como fase intermediária de clareza operacional antes da F4C. F5 segue como Source Expansion (PH > Reddit > YouTube > Reviews). Hardening fica em F6. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
 > **Fonte canônica:** [`docs/PRD.md`](PRD.md). Detalhes de arquitetura F4: [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md). Roadmap F5: [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Em qualquer divergência, o **PRD vence**.
 
 ---
@@ -17,14 +17,15 @@
 | F3 QA | Agent 7 | [`docs/agents/AGENT_7_QA.md`](agents/AGENT_7_QA.md) | [`docs/handback/F3_QA_DONE.md`](handback/F3_QA_DONE.md) | Agent 5 |
 | **F4A Motor + Evidence Layer (HN-only)** | **Agent 8** | [`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) | `docs/handback/F4A_DONE.md` | Agent 5 |
 | **F4B Cross-source Google Trends** | **Agent 9** | [`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | `docs/handback/F4B_DONE.md` | Agent 5 |
-| **F4C Feedback + Idea/Brief gates** | **Agent 10** | [`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md) | `docs/handback/F4C_DONE.md` | Agent 5 |
+| **F4UX Funil UX / Operator Clarity** | **Agent 10** | [`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md) | `docs/handback/F4UX_DONE.md` | Agent 5 |
+| **F4C Feedback + Idea/Brief gates** | **Agent 11** | [`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md) | `docs/handback/F4C_DONE.md` | Agent 5 |
 | F5A Product Hunt | a definir | a definir | `docs/handback/F5A_DONE.md` | Agent 5 |
 | F5B Reddit | a definir | a definir | `docs/handback/F5B_DONE.md` | Agent 5 |
 | F5C YouTube | a definir | a definir | `docs/handback/F5C_DONE.md` | Agent 5 |
 | F5D Reviews | a definir | a definir | `docs/handback/F5D_DONE.md` | Agent 5 |
 | F6 Hardening | a definir | a definir | `docs/handback/F6_DONE.md` | Agent 5 |
 
-Sequência **estritamente serial** dentro do bloco F4 (F4A → F4B → F4C). F5 também serial (F5A → F5B → F5C → F5D), uma fonte por vez sob aprovação. F6 ao final.
+Sequência **estritamente serial** dentro do bloco F4 (F4A → F4B → F4UX → F4C). F5 também serial (F5A → F5B → F5C → F5D), uma fonte por vez sob aprovação. F6 ao final.
 
 ---
 
@@ -265,20 +266,49 @@ Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architec
 - Evidence `search_momentum` populando.
 - Atualização em `opportunity-score` para considerar Trends em `trend_score`.
 - Atualização UI em `/funil/trends` e `/funil/source-confidence`.
+- Adapter `gtrends` reutilizável por trigger: cron geral (descoberta top/rising), `watch_topics` (lista monitorada) e `manual_inputs` (enriquecimento on-demand), quando houver provider aprovado para o modo necessário. Manual/watch não contam como fonte externa nem elevam `source_confidence`.
 
 ### Gates F4B
 
-- [ ] ≥ 30 evidences `search_momentum`/dia em dev por 3 dias seguidos.
-- [ ] ≥ 1 `opportunity_card` com `source_confidence ≥ 0.65` (HN + GT).
+- [ ] Pelo menos 1 evidence `search_momentum` de `gtrends` persistida em dev e visível no evidence trace.
+- [ ] Fluxo com `watch_topics` demonstrado como seed monitorada, sem elevar `source_confidence` por si só.
+- [ ] Fluxo manual on-demand demonstrado ou documentado como bloqueado por falta de provider de lookup arbitrário aprovado.
+- [ ] Evidence externa `gtrends` no mesmo `topic_key` participa corretamente do cálculo/trace de Source Confidence.
+- [ ] **Meta operacional, não blocker absoluto:** ≥ 30 evidences `search_momentum`/dia em dev por 3 execuções; se não atingir, documentar limitação e pedir decisão do operador.
+- [ ] **Meta operacional:** ≥ 1 `opportunity_card` com `source_confidence ≥ 0.65` (HN + GT); se não atingir, explicar se a causa é dados, match, fórmula ou threshold.
 - [ ] Caso "trend forte sem dor" → `gate_state='trend_only'` correto.
 - [ ] Caso "dor sem trend" → `gate_state='pain_candidate'` correto.
 - [ ] Custo IA da fase em dev ≤ US$ 0,30.
 
 ---
 
+## F4UX — Funil UX / Operator Clarity
+
+**Owner:** Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). **Tempo estimado:** fase curta.
+
+### Entregáveis (resumo)
+
+- Navegação/sidebar orientada pelo fluxo do MOTOR, não por source.
+- Funil como fluxo principal: Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs.
+- Legado F3 visualmente secundário, com labels claros.
+- Auditabilidade genérica de `evidences` e Evidence Trace.
+- Microcopy/estados vazios explicando baixa confiança, ausência de overlap, rejeições/filtros, manual/watch como seeds e próximo passo operacional.
+- Nenhuma tela/menu específico para Google Trends, Product Hunt, Reddit, YouTube ou Reviews.
+
+### Gates F4UX
+
+- [ ] Operador consegue entender rapidamente o que o MOTOR encontrou e quais evidences sustentam cada item.
+- [ ] UI explica origem/source de cada evidence sem organizar o produto por source.
+- [ ] UI mostra/explica ausência de overlap e baixa confiança sem falsear validação.
+- [ ] Funil, Legado, Configurações/Sistema e Fontes/Source Confidence ficam claramente separados.
+- [ ] Não altera motor, scoring, schema, migrations, collectors, cron, feedback, ideias, briefs ou F5.
+- [ ] `npm run typecheck`, `npm run lint` e `npm run build` passam.
+
+---
+
 ## F4C — Feedback estruturado + Idea/Brief gates
 
-**Owner:** Agent 10 ([`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md)). **Tempo estimado:** 3–5 dias.
+**Owner:** Agent 11 ([`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md)). **Tempo estimado:** 3–5 dias.
 
 ### Entregáveis (resumo)
 

@@ -23,7 +23,7 @@
 - **Allowed scope:**
   - Ler tudo.
   - Criar/atualizar docs em `docs/PROJECT_STATE.md`, `docs/DECISIONS.md`, `docs/AGENTS.md`, `docs/HANDOFF_TEMPLATE.md`, `docs/NEXT_STEPS.md`, `docs/agents/*.md`, `docs/handback/AGENT_0_*.md`.
-  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-17).
+  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-19 e DP-23).
   - **Editar `docs/PRD.md`** apenas sob autorização explícita do operador para mudança estratégica registrada como D-XX (autorização concedida em 2026-05-06 para rodada 7 do PRD).
   - **Editar `docs/IMPLEMENTATION_PLAN.md`** quando refletir decisão registrada em DECISIONS.
   - **Editar `.cursor/rules/gomvp-product-rules.mdc`** apenas sob autorização explícita do operador para refletir princípios novos (autorização concedida em 2026-05-06).
@@ -197,9 +197,9 @@
   - Migrar dados legados retroativamente para `evidences` (opção fica para operador decidir; default = não).
   - Tocar `.env*`, secrets, MCP.
   - Commit/push/PR sem aprovação.
-- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), [`architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md), Implementation Plan (F4A), Decisions D-01..D-17, Cursor Rules, handbacks F2/F3.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), [`architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md), Implementation Plan (F4A), Decisions D-01..D-18, Cursor Rules, handbacks F2/F3.
 - **Expected handback:** `docs/handback/F4A_DONE.md`.
-- **Status atual:** DONE, mas review Agent 5 ficou `rejected`; correção segue com Agent 8.5.
+- **Status atual:** DONE (`approved_with_minors`) após correção Agent 8.5 e review Agent 5.
 
 ---
 
@@ -223,7 +223,7 @@
   - Commit/push/PR sem aprovação.
 - **Input docs:** PRD, F4 architecture, Implementation Plan, Decisions D-18, Project State, F4A_DONE, F4A_REVIEW, Agent 0 reassessment, Agent 8 brief.
 - **Expected handback:** `docs/handback/F4A_FIX_DONE.md`.
-- **Status atual:** READY TO START (próximo agente). F4B bloqueada até nova review Agent 5.
+- **Status atual:** DONE (`approved_with_minors`). F4B liberada para Agent 9.
 
 ---
 
@@ -232,7 +232,8 @@
 - **Brief:** [`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md).
 - **Responsabilidade:** Fase F4B — Google Trends como segunda fonte mínima do motor; valida cross-source confidence.
 - **Allowed scope:**
-  - Pasta nova `src/sources/gtrends/` (`README.md` ToS-first, `collector.ts`, `normalizer.ts`).
+  - Pasta nova `src/sources/gtrends/` (`README.md` ToS-first, `collector.ts`, `normalizer.ts`) com BigQuery-first/approval-first.
+  - Adapter reutilizável: `cron`, `watch_topics` e `manual_inputs` podem acionar a mesma fonte para gerar `search_momentum`, quando houver provider aprovado.
   - Endpoint `/api/cron/collect-trends`.
   - Atualização leve em `src/motor/opportunity-score.ts` para incorporar `search_momentum`.
   - Atualização UI em `/funil/trends` e `/funil/source-confidence`.
@@ -240,17 +241,44 @@
   - Alterar schema do motor.
   - Alterar tabelas legadas.
   - Adicionar fonte além de Trends.
+  - Transformar Trends em módulo isolado ou acoplar a integração apenas ao cron.
+  - Contar `manual`/`watch` como fonte externa.
   - Desligar pipeline F2 ou adapter F4A.
   - Commit/push/PR sem aprovação.
-- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), brief Agent 8, handback F4A.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), [`architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md), brief Agent 8, handbacks/reviews F4A, Decisions DP-22.
 - **Expected handback:** `docs/handback/F4B_DONE.md`.
-- **Status atual:** PENDING (entra após F4A aprovado).
+- **Status atual:** DONE (`approved_with_minors`) após [`docs/handback/F4B_REVIEW.md`](handback/F4B_REVIEW.md). Minors aceitos: sem overlap real GT+HN, cron GT desligado, `source_confidence >= 0.65` não demonstrado por falta de match.
 
 ---
 
-## Agent 10 — F4C Feedback estruturado + Idea/Brief gates
+## Agent 10 — F4UX Funil UX / Operator Clarity
 
-- **Brief:** [`docs/agents/AGENT_10_F4C_FEEDBACK.md`](agents/AGENT_10_F4C_FEEDBACK.md).
+- **Brief:** [`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md).
+- **Responsabilidade:** fase intermediária curta entre F4B e F4C para clareza operacional do Funil. Organizar a experiência pelo fluxo do MOTOR, não por source: Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs.
+- **Allowed scope:**
+  - Reorganizar navegação/sidebar se necessário.
+  - Deixar Funil como fluxo principal e Legado visualmente secundário.
+  - Padronizar labels em PT-BR.
+  - Melhorar auditabilidade genérica de `evidences` e Evidence Trace.
+  - Explicar overlap ausente, baixa confiança, seeds manual/watch e próximos passos operacionais.
+  - Estados vazios/loading/error e microcopy operacional.
+- **Forbidden scope:**
+  - Alterar motor/scoring/schema/collectors/cron.
+  - Criar migration.
+  - Implementar feedback estruturado, geração de ideias ou briefs (F4C).
+  - Criar menu/produto específico de Google Trends ou outras sources.
+  - Iniciar F5.
+  - Tocar `.env*`, secrets, MCP.
+  - Commit/push/PR sem aprovação.
+- **Input docs:** PRD, F4 architecture, Implementation Plan, Project State, F4B_DONE, F4B_REVIEW, frontend skill, rules.
+- **Expected handback:** `docs/handback/F4UX_DONE.md`.
+- **Status atual:** READY TO START.
+
+---
+
+## Agent 11 — F4C Feedback estruturado + Idea/Brief gates
+
+- **Brief:** [`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md).
 - **Responsabilidade:** Fase F4C — `feedback` polimórfico com `reason_code` obrigatório; gates `idea_allowed` e `brief_allowed`; prompts P-IDE-002 e P-BRF-002.
 - **Allowed scope:**
   - Migration `0006_*.sql`: alteração polimórfica em `feedback` (target_kind/target_id/reason_code/gate_after) + backfill seguro.
@@ -266,9 +294,9 @@
   - Adicionar fonte nova.
   - Destruir feedback existente.
   - Commit/push/PR sem aprovação.
-- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9, handbacks F4A/F4B.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9/10, handbacks F4A/F4B/F4UX.
 - **Expected handback:** `docs/handback/F4C_DONE.md`. **F4 fecha após este handback aprovado.**
-- **Status atual:** PENDING (entra após F4B aprovado).
+- **Status atual:** PENDING (entra após F4UX aprovado).
 
 ---
 
@@ -285,4 +313,5 @@
 | Agent 7 | F3 aprovado | `F3_QA_DONE.md` | acionar Agent 5 |
 | **Agent 8** | F3 QA aprovado + brief F4A aprovado pelo operador | `F4A_DONE.md` | acionar Agent 5 |
 | **Agent 9** | F4A aprovado | `F4B_DONE.md` | acionar Agent 5 |
-| **Agent 10** | F4B aprovado | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |
+| **Agent 10** | F4B aprovado | `F4UX_DONE.md` | acionar Agent 5 |
+| **Agent 11** | F4UX aprovado | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |

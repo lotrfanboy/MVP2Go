@@ -118,6 +118,12 @@
 - **Decisão:** F4A **não exige** `qualified_opportunity` nem volume real mínimo absoluto de 10 evidences pós-cutoff. F4A valida: adapter sem backfill; evidence válida; `need_cluster`; `opportunity_card`; cap HN-only; UI de baixa confiança; rejeição de categoria bloqueada/alto risco; testes encerrando corretamente; F3 legado intacto.
 - **Implicação:** `qualified_opportunity` forte e volume externo consistente passam a ser evidências de F4B/F5, não condição para aprovar F4A. Se houver menos de 10 sinais novos elegíveis, o handback deve registrar **dados insuficientes** e validar lote por fixture/dev seed controlado. Opportunity com `blacklist_tags`, categoria bloqueada, alto risco ou `not_indielab_fit` deve ser `rejected` com `reason_codes`, nunca `opportunity_candidate`; saúde/médico/regulatório/desinformação sensível é apenas exemplo.
 
+### D-19 — F4UX antes de F4C
+- **Status:** Fechada (2026-06-01, decisão operador após F4B review).
+- **Contexto:** F4A entregou o motor HN-only e F4B adicionou Google Trends como source adapter, mas o operador ainda sente dificuldade para entender e navegar o produto. Adicionar feedback estruturado, geração de ideias e briefs sobre uma UI confusa prejudicaria o aprendizado do produto.
+- **Decisão:** Inserir uma fase intermediária curta **F4UX — Funil UX / Operator Clarity** entre F4B e F4C. F4UX organiza a experiência pelo fluxo do MOTOR: Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs. Sources são infraestrutura de evidence, não menus/produtos.
+- **Implicação:** F4C fica pausada até F4UX ser revisada. F4UX não altera motor, scoring, schema, collectors, cron, feedback, geração de ideias/briefs ou F5. Google Trends/Product Hunt/Reddit/YouTube/Reviews não viram menus principais; no máximo aparecem em áreas genéricas de Fontes/Saúde das Fontes/Source Confidence.
+
 ---
 
 ## Princípios operacionais permanentes (PRD Apêndice E + Implementation Plan)
@@ -145,6 +151,8 @@
 - **DP-19** **Sistema deve poder dizer "não há oportunidade aqui"** (`gate_state='trend_only'` é resposta válida, não falha).
 - **DP-20** **Reason code obrigatório** em transições de `gate_state` em opportunities/ideas (D-15).
 - **DP-21** **F4A é gate estrutural HN-only** (D-18): não exigir `qualified_opportunity`; não falsear volume; bloquear/rejeitar categorias incompatíveis com IndieLab antes de promover `opportunity_candidate`.
+- **DP-22** **Source adapter ≠ trigger.** Cada fonte externa deve gerar `evidences` reutilizáveis pelo motor e não ficar acoplada a um único disparador. Cron geral, `watch_topics` e `manual_inputs` podem acionar a mesma fonte quando fizer sentido. Manual/watch são seeds internas e nunca contam como fonte externa; `source_confidence` só sobe quando um adapter externo (`hn`, `gtrends`, `ph`, `reddit`, `youtube`, `reviews`) grava evidence real no mesmo `topic_key`. Não criar abstração global de sources antes de 2-3 fontes repetirem o padrão.
+- **DP-23** **Navegação orientada pelo MOTOR, não por source** (D-19): o produto organiza o operador pelo fluxo Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs. Fontes externas são infraestrutura/auditabilidade; não criar menus principais por Google Trends/Product Hunt/Reddit/YouTube/Reviews.
 
 ---
 

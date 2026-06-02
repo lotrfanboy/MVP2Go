@@ -580,7 +580,7 @@ src/
 │   │   ├── normalizer.ts              ← HN payload → raw_items
 │   │   └── signal-to-evidence.ts      ← adapter signals → evidences
 │   ├── gtrends/                       ← F4B
-│   │   ├── collector.ts               ← google-trends-api ou similar (sob aprovação de pacote)
+│   │   ├── collector.ts               ← BigQuery public dataset preferencial (sob approval-first)
 │   │   ├── normalizer.ts              ← Trends → evidences direto (search_momentum)
 │   │   └── README.md
 │   ├── manual/
@@ -676,19 +676,61 @@ Entrega:
 - Evidence type `search_momentum` populando.
 - Atualização em `opportunity_score` para considerar `search_momentum` na composição.
 - UI: **/funil/trends** passa a mostrar trends cruzadas com discussion (HN + GT).
-- Documentação de rate-limit, fallback e custo zero.
+- Documentação de ToS/compliance, rate-limit, fallback e custo. Caminho preferencial: BigQuery public dataset de Google Trends, se viável; fetch direto/biblioteca não oficial só com aprovação explícita.
+- Dois fluxos suportados: descoberta geral/top/rising e lista monitorada a partir de `watch_topics`. `watch_topics` são seeds operacionais/hipóteses monitoradas, não fonte externa. Só `gtrends`/HN/etc. elevam `source_confidence`.
+- A integração `gtrends` deve nascer como adapter reutilizável, não acoplado ao cron: `cron`, `watch_topics` e `manual_inputs` podem acionar a mesma fonte para gerar `search_momentum`, quando houver provider aprovado para o modo necessário.
 
 Gates F4B:
 
-- [ ] ≥ 1 opportunity_card com `source_confidence ≥ 0.65` (HN + GT).
+- [ ] Pelo menos 1 evidence `search_momentum` de `gtrends` persistida e visível no evidence trace.
+- [ ] Demonstrar que `watch_topics` entram como seed monitorada sem elevar `source_confidence` por si só.
+- [ ] Demonstrar que manual on-demand pode reutilizar a integração ou documentar bloqueio se lookup arbitrário exigir provider ainda não aprovado.
+- [ ] Demonstrar que `gtrends` no mesmo `topic_key` participa corretamente do cálculo/trace de Source Confidence.
+- [ ] Meta: ≥ 1 opportunity_card com `source_confidence ≥ 0.65` (HN + GT). Se não atingir, documentar se a causa é dados, match, fórmula ou threshold.
 - [ ] Demonstrar caso "trend forte sem dor" → `gate_state='trend_only'` correto.
 - [ ] Demonstrar caso "dor sem trend" → `gate_state='pain_candidate'` correto.
 
-Saída F4B: `docs/handback/F4B_DONE.md` + revisão Agent 5.
+Saída F4B: `docs/handback/F4B_DONE.md` + revisão Agent 5. **Status:** DONE (`approved_with_minors`) em `docs/handback/F4B_REVIEW.md`; sem overlap real GT+HN nos dados atuais, sem bloquear a fase.
+
+### F4UX — Funil UX / Operator Clarity
+
+**Owner:** Agent 10.
+**Tempo estimado:** fase curta.
+
+Entrega:
+
+- Reorganizar/clarear a experiência pelo fluxo do MOTOR, não por source:
+  - Radar
+  - Evidências
+  - Tendências
+  - Dores agrupadas
+  - Oportunidades
+  - Ideias
+  - Briefs
+- Deixar Legado F3 visualmente secundário e bem rotulado.
+- Melhorar auditabilidade genérica de `evidences` e Evidence Trace.
+- Explicar ausência de overlap, baixa confiança, rejeições/filtros, manual/watch como seeds e próximo passo operacional.
+- Manter fontes como infraestrutura de evidence: sem menu principal para Google Trends, Product Hunt, Reddit, YouTube ou Reviews.
+
+Forbidden F4UX:
+
+- Não alterar motor, scoring, schema, migrations, collectors ou cron.
+- Não implementar feedback estruturado, generation de ideias ou briefs.
+- Não iniciar F5.
+
+Gates F4UX:
+
+- [ ] Operador entende rapidamente o que o MOTOR encontrou e quais evidences sustentam cada item.
+- [ ] Evidence Trace mostra `source_key`, `evidence_type`, `topic_key`, métricas/metadados e limitações de forma legível.
+- [ ] UI explica low confidence e ausência de overlap sem falsear validação.
+- [ ] Navegação principal não é organizada por source.
+- [ ] F3 legado permanece funcional e secundário.
+
+Saída F4UX: `docs/handback/F4UX_DONE.md` + revisão Agent 5.
 
 ### F4C — Feedback estruturado + Idea/Brief gates
 
-**Owner:** Agent 10.
+**Owner:** Agent 11.
 **Tempo estimado:** 3–5 dias.
 
 Entrega:
@@ -708,7 +750,7 @@ Gates F4C:
 - [ ] Aprovação/rejeição obriga reason_code (validação Zod).
 - [ ] 2 ciclos de feedback movem `opportunity_score` médio do top-10.
 
-Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somente após F4C aprovado.
+Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somente após F4C aprovado. F4C só entra após F4UX aprovada.
 
 ---
 
@@ -775,7 +817,7 @@ Substitui P-BRF-001. Mesmo schema; só dispara se `idea.gate_state='idea_allowed
 | F4A | P-EVI-001 sobre **novos** signals (pós adapter) | volume conforme coleta | ~US$ 0,20 |
 | F4A | P-OPP-001 sobre opportunity_cards (~30–60/mês) | 50 chamadas × 1k tok in / 400 tok out | ~US$ 0,40 |
 | F4A | P-TRD-001 sobre trend_candidates (~10–20/mês) | 15 chamadas × 800 tok | ~US$ 0,10 |
-| F4B | sem IA paga (Trends API gratuita; embeddings de evidences extras) | ~500 embeddings/mês | ~US$ 0,02 |
+| F4B | sem IA paga para coleta; BigQuery/API deve ser estimado antes (free tier/cotas podem aplicar); embeddings de evidences extras | ~500 embeddings/mês | ~US$ 0,02 + custo BigQuery/API esperado |
 | F4C | P-IDE-002 + P-BRF-002 (sob demanda, baixo volume) | 30 chamadas/mês | ~US$ 0,30 |
 | **Total esperado F4** | | | **≤ US$ 1,5/mês** (ordem de grandeza) |
 
