@@ -24,7 +24,7 @@ export function BudgetPill({ currentSpendUsd, monthlyBudgetUsd }: BudgetPillProp
   return (
     <Link
       href="/custos"
-      className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-[13px] font-medium hover:bg-accent"
+      className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/70 px-3 py-1 text-[13px] font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
     >
       <span className={["h-2 w-2 rounded-full", dotClass].join(" ")} />
       <span className="font-mono text-muted-foreground">

@@ -1,181 +1,228 @@
-import { desc } from "drizzle-orm";
+import Link from "next/link";
+import { count, desc, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { evidences, opportunityCards } from "@/db/schema";
+import {
+  EvidenceTraceList,
+  InsightNotice,
+  MetricCard,
+  PageHeader,
+  SourceBadge,
+  StatusBadge,
+  formatScore,
+  numberFromDb,
+  sourceMeta,
+  type EvidenceTraceItem,
+} from "@/components/funil/funil-ui";
 
-type OpportunityRow = typeof opportunityCards.$inferSelect;
+export const dynamic = "force-dynamic";
 
-type EvidenceAuditRow = {
+type OpportunityRow = {
   id: string;
-  sourceKey: string;
-  evidenceType: string;
-  topicKey: string | null;
-  topicLabel: string | null;
-  observedAt: Date;
-  strength: string;
-  confidence: string;
-  painText: string | null;
-  audienceHint: string | null;
-  metricsJson: unknown;
-  metadataJson: unknown;
+  topicLabel: string;
+  sourceConfidence: string;
+  sourceCount: number;
+  gateState: string;
 };
-
-function formatDate(value: Date): string {
-  return value.toISOString().slice(0, 10);
-}
-
-function formatJsonPreview(value: unknown): string {
-  const text = JSON.stringify(value ?? {}, null, 2);
-  return text.length > 360 ? `${text.slice(0, 357)}...` : text;
-}
+type SourceRow = { sourceKey: string; c: number };
 
 export default async function SourceConfidencePage() {
   const db = getDb();
-  let rows: OpportunityRow[] = [];
-  let recentEvidences: EvidenceAuditRow[] = [];
+  let opportunities: OpportunityRow[] = [];
+  let recentEvidences: EvidenceTraceItem[] = [];
+  let sources: SourceRow[] = [];
+  let totalEvidences = 0;
+  let externalEvidenceCount = 0;
+  let seedEvidenceCount = 0;
+  let sourceConfidenceAboveSingleSource = 0;
+  let dbError = false;
+
   try {
-    [rows, recentEvidences] = await Promise.all([
-      db.select().from(opportunityCards).orderBy(desc(opportunityCards.opportunityScore)).limit(80),
+    const [[te], [external], [seed], [overlap], opportunityRows, sourceRows, evidenceRows] = await Promise.all([
+      db.select({ c: count() }).from(evidences),
+      db
+        .select({ c: count() })
+        .from(evidences)
+        .where(sql`${evidences.sourceKey} not in ('manual', 'watch')`),
+      db
+        .select({ c: count() })
+        .from(evidences)
+        .where(sql`${evidences.sourceKey} in ('manual', 'watch')`),
+      db
+        .select({ c: count() })
+        .from(opportunityCards)
+        .where(sql`${opportunityCards.sourceConfidence} > 0.4`),
+      db
+        .select({
+          id: opportunityCards.id,
+          topicLabel: opportunityCards.topicLabel,
+          sourceConfidence: opportunityCards.sourceConfidence,
+          sourceCount: opportunityCards.sourceCount,
+          gateState: opportunityCards.gateState,
+        })
+        .from(opportunityCards)
+        .orderBy(desc(opportunityCards.opportunityScore))
+        .limit(80),
+      db
+        .select({ sourceKey: evidences.sourceKey, c: count() })
+        .from(evidences)
+        .groupBy(evidences.sourceKey)
+        .orderBy(sql`count(*) DESC`),
       db
         .select({
           id: evidences.id,
           sourceKey: evidences.sourceKey,
+          sourceRef: evidences.sourceRef,
           evidenceType: evidences.evidenceType,
           topicKey: evidences.topicKey,
           topicLabel: evidences.topicLabel,
           observedAt: evidences.observedAt,
-          strength: evidences.strength,
-          confidence: evidences.confidence,
+          summary: evidences.summary,
           painText: evidences.painText,
           audienceHint: evidences.audienceHint,
+          quoteExcerpt: evidences.quoteExcerpt,
+          strength: evidences.strength,
+          confidence: evidences.confidence,
           metricsJson: evidences.metricsJson,
           metadataJson: evidences.metadataJson,
+          blacklistTags: evidences.blacklistTags,
+          manualInputId: evidences.manualInputId,
+          watchTopicId: evidences.watchTopicId,
         })
         .from(evidences)
         .orderBy(desc(evidences.observedAt))
         .limit(60),
     ]);
+
+    totalEvidences = Number(te?.c ?? 0);
+    externalEvidenceCount = Number(external?.c ?? 0);
+    seedEvidenceCount = Number(seed?.c ?? 0);
+    sourceConfidenceAboveSingleSource = Number(overlap?.c ?? 0);
+    opportunities = opportunityRows;
+    sources = sourceRows;
+    recentEvidences = evidenceRows;
   } catch {
-    rows = [];
-    recentEvidences = [];
+    dbError = true;
   }
+
+  const hasTrends = sources.some((source) => source.sourceKey === "gtrends");
+  const noOverlapYet = hasTrends && sourceConfidenceAboveSingleSource === 0;
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-xl font-semibold">Fonte & confiança</h1>
-        <p className="text-sm text-muted-foreground">
-          `source_confidence` deriva de fontes externas distintas. Manual e watch aparecem como rastreio,
-          mas não elevam a contagem externa.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Auditabilidade"
+        title="Evidencias e confianca das fontes"
+        description="Sinais individuais que alimentam o motor. Podem vir de HN, Google Trends, manual/watch e futuras fontes; seeds internas nao validam mercado sozinhas."
+      />
 
-      <div className="rounded-lg border border-border">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
-            <tr className="border-b border-border bg-muted/40">
-              <th className="px-3 py-2 font-medium">Oportunidade</th>
-              <th className="px-3 py-2 font-medium">source_confidence</th>
-              <th className="px-3 py-2 font-medium">Fontes (#)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="px-3 py-6 text-center text-muted-foreground">
-                  Sem dados.
-                </td>
-              </tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="border-b border-border/60">
-                  <td className="px-3 py-2">
-                    <a className="text-primary hover:underline" href={`/funil/opportunities/${r.id}`}>
-                      {r.topicLabel}
-                    </a>
-                  </td>
-                  <td className="px-3 py-2 tabular-nums">{r.sourceConfidence}</td>
-                  <td className="px-3 py-2 tabular-nums">{r.sourceCount}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {dbError ? (
+        <InsightNotice title="Dados indisponiveis" tone="warning">
+          Nao consegui carregar a auditoria de evidencias. A pagina continua funcional, mas sem dados.
+        </InsightNotice>
+      ) : null}
 
-      <section className="space-y-3">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold">Evidências recentes</h2>
-          <p className="text-sm text-muted-foreground">
-            Auditoria genérica da camada `evidences`, independente da origem. Use esta tabela para conferir
-            `source_key`, `evidence_type`, tópico, métricas e metadados antes de interpretar qualquer score.
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Total de evidencias" value={totalEvidences} helper="Tudo que alimenta o motor." />
+        <MetricCard label="Fontes externas" value={externalEvidenceCount} helper="HN, GT e futuras fontes F5." />
+        <MetricCard label="Seeds internas" value={seedEvidenceCount} helper="Manual/watch; nao validam mercado sozinhos." />
+        <MetricCard label="Com uplift" value={sourceConfidenceAboveSingleSource} helper="Cards acima do patamar single-source." />
+      </section>
+
+      {noOverlapYet ? (
+        <InsightNotice title="Sem overlap GT + HN nos dados atuais" tone="warning">
+          Google Trends esta presente como `search_momentum`, mas ainda nao cruzou com HN/need clusters no mesmo
+          `topic_key`. A UI mostra essa ausencia em vez de inflar confianca artificialmente.
+        </InsightNotice>
+      ) : (
+        <InsightNotice title="O que observar" tone="info">
+          Procure diversidade de fontes externas, clareza de dor/publico e ausencia de bloqueios. Metadados tecnicos ficam recolhidos nos cards.
+        </InsightNotice>
+      )}
+
+      <section className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+        <article className="rounded-lg border border-border/80 bg-card/80 p-4 shadow-[0_1px_0_hsl(0_0%_100%/0.03)]">
+          <h2 className="text-sm font-semibold">Fontes observadas</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Fontes externas podem elevar confianca quando aparecem no mesmo tema. Seeds internas apenas orientam a investigacao.
           </p>
-        </div>
+          <div className="mt-4 space-y-3">
+            {sources.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma evidence ainda.</p>
+            ) : (
+              sources.map((source) => {
+                const meta = sourceMeta(source.sourceKey);
+                return (
+                  <div key={source.sourceKey} className="rounded-md border border-border/80 bg-background/35 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <SourceBadge sourceKey={source.sourceKey} />
+                      <span className="font-mono text-sm">{source.c}</span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{meta.description}</p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </article>
 
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="min-w-[1200px] border-collapse text-left text-[12px]">
-            <thead>
-              <tr className="border-b border-border bg-muted/40">
-                <th className="px-3 py-2 font-medium">Fonte</th>
-                <th className="px-3 py-2 font-medium">Tipo</th>
-                <th className="px-3 py-2 font-medium">Tópico</th>
-                <th className="px-3 py-2 font-medium">Observado</th>
-                <th className="px-3 py-2 font-medium">Força</th>
-                <th className="px-3 py-2 font-medium">Dor</th>
-                <th className="px-3 py-2 font-medium">Audiência</th>
-                <th className="px-3 py-2 font-medium">Métricas / metadata</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentEvidences.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
-                    Sem evidências recentes.
-                  </td>
+        <article className="rounded-lg border border-border/80 bg-card/80 p-4 shadow-[0_1px_0_hsl(0_0%_100%/0.03)]">
+          <h2 className="text-sm font-semibold">Oportunidades por confianca</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            O numero e saida do motor. Esta tabela so ajuda a localizar cards que precisam de auditoria.
+          </p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[620px] border-collapse text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="px-3 py-2 font-medium">Oportunidade</th>
+                  <th className="px-3 py-2 font-medium">Gate</th>
+                  <th className="px-3 py-2 font-medium">Confianca</th>
+                  <th className="px-3 py-2 font-medium">Fontes</th>
                 </tr>
-              ) : (
-                recentEvidences.map((evidence) => (
-                  <tr key={evidence.id} className="border-b border-border/60 align-top">
-                    <td className="px-3 py-2">
-                      <span className="rounded bg-muted px-2 py-1 font-mono text-[11px]">
-                        {evidence.sourceKey}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 font-mono text-[11px]">{evidence.evidenceType}</td>
-                    <td className="max-w-[220px] px-3 py-2">
-                      <div className="font-medium">{evidence.topicLabel ?? evidence.topicKey ?? "Sem tópico"}</div>
-                      {evidence.topicKey ? (
-                        <div className="mt-1 font-mono text-[11px] text-muted-foreground">
-                          {evidence.topicKey}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2 tabular-nums">{formatDate(evidence.observedAt)}</td>
-                    <td className="px-3 py-2 tabular-nums">
-                      {evidence.strength}
-                      <div className="text-muted-foreground">conf {evidence.confidence}</div>
-                    </td>
-                    <td className="max-w-[180px] px-3 py-2 text-muted-foreground">
-                      {evidence.painText ?? "-"}
-                    </td>
-                    <td className="max-w-[180px] px-3 py-2 text-muted-foreground">
-                      {evidence.audienceHint ?? "-"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="grid gap-2 lg:grid-cols-2">
-                        <pre className="max-h-40 overflow-auto rounded bg-muted p-2 font-mono text-[11px]">
-                          {formatJsonPreview(evidence.metricsJson)}
-                        </pre>
-                        <pre className="max-h-40 overflow-auto rounded bg-muted p-2 font-mono text-[11px]">
-                          {formatJsonPreview(evidence.metadataJson)}
-                        </pre>
-                      </div>
+              </thead>
+              <tbody>
+                {opportunities.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
+                      Sem oportunidades.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  opportunities.map((row) => (
+                    <tr key={row.id} className="border-b border-border/60">
+                      <td className="px-3 py-2">
+                          <Link className="rounded-sm text-violet-200 hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300" href={`/funil/opportunities/${row.id}`}>
+                          {row.topicLabel}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2">
+                        <StatusBadge value={row.gateState} />
+                      </td>
+                      <td className="px-3 py-2 font-mono">{formatScore(row.sourceConfidence)}</td>
+                      <td className="px-3 py-2 font-mono">
+                        {row.sourceCount}
+                        {numberFromDb(row.sourceConfidence) <= 0.4 ? (
+                          <span className="ml-2 text-xs text-amber-100">baixo</span>
+                        ) : null}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold">Trace generico de evidencias recentes</h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Cards recentes com resumo primeiro. Abra detalhes tecnicos apenas quando precisar auditar ids, metricas e metadados.
+          </p>
         </div>
+        <EvidenceTraceList items={recentEvidences} showJson />
       </section>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { NAV_GROUPS } from "./nav-config";
 import { BudgetPill } from "./budget-pill";
 
 type AppTopbarProps = {
@@ -8,41 +9,39 @@ type AppTopbarProps = {
   monthlyBudgetUsd: number;
 };
 
+const STATIC_LABELS: Record<string, { group: string; label: string }> = {
+  "/ideias": { group: "Legado", label: "Detalhe da ideia" },
+  "/brief": { group: "Legado", label: "Brief legado" },
+};
+
 function breadcrumbFromPath(pathname: string) {
-  const first = pathname.split("/").filter(Boolean)[0] ?? "dashboard";
-  const mapping: Record<string, string> = {
-    dashboard: "Dashboard",
-    ranking: "Ranking",
-    ideias: "Detalhe da Ideia",
-    filtradas: "Filtradas",
-    sinais: "Sinais",
-    clusters: "Clusters",
-    runs: "Execuções",
-    custos: "Custos",
-    fontes: "Fontes",
-    pesos: "Pesos",
-    blacklist: "Blacklist",
-    prompts: "Prompts",
-    brief: "Brief MVP",
-    configuracoes: "Configurações",
-    coleta: "Coleta",
-  };
-  return mapping[first] ?? "Dashboard";
+  const item = NAV_GROUPS.flatMap((group) =>
+    group.items.map((navItem) => ({ group: group.label, item: navItem })),
+  )
+    .filter(({ item }) => !item.disabled)
+    .sort((a, b) => b.item.href.length - a.item.href.length)
+    .find(({ item }) => pathname === item.href || pathname.startsWith(`${item.href}/`));
+
+  if (item) return { group: item.group, label: item.item.label };
+
+  const staticMatch = Object.entries(STATIC_LABELS).find(([href]) => pathname.startsWith(href));
+  return staticMatch?.[1] ?? { group: "Operacao", label: "Dashboard" };
 }
 
 export function AppTopbar({ currentSpendUsd, monthlyBudgetUsd }: AppTopbarProps) {
   const pathname = usePathname();
+  const breadcrumb = breadcrumbFromPath(pathname);
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-border bg-background px-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Operação</span>
-        <span>›</span>
-        <span className="text-foreground">{breadcrumbFromPath(pathname)}</span>
+    <header className="flex h-[52px] min-h-[52px] items-center justify-between border-b border-border/70 bg-background/[0.72] px-6 backdrop-blur-xl lg:px-8">
+      <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+        <span>{breadcrumb.group}</span>
+        <span className="text-muted-foreground/45">/</span>
+        <span className="truncate font-medium text-foreground">{breadcrumb.label}</span>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-shrink-0 items-center gap-3">
         <BudgetPill currentSpendUsd={currentSpendUsd} monthlyBudgetUsd={monthlyBudgetUsd} />
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-violet-400/25 bg-violet-400/10 text-[11px] font-semibold text-violet-100">
           OP
         </div>
       </div>
