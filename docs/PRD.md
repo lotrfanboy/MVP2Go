@@ -1,7 +1,7 @@
 # GoMVP V1 — PRD
 
 > **Versão:** 1.1 (rodada 7).
-> **Status:** decisões D-01 a D-20 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A, F4B e F4UX aprovadas com minors. Próximo gate: F4OPS (Vercel Preview / Staging + Performance Validation) antes da F4C.**
+> **Status:** decisões D-01 a D-20 fechadas. F0/F1/F2/F3 entregues e revisadas. **F4A, F4B, F4UX e F4OPS aprovadas com minors. Próximo gate operacional: formalizar `staging`/`feature/*` antes de qualquer nova fase funcional.**
 > **Owner:** Built2Go (operador único).
 > **Última revisão:** rodada 7 + ajuste 2026-05-09 (cap IA D-16 = alvo operacional F4/F5 configurável por ENV/banco; sem backfill F4A; badge baixa confiança em qualified HN-only).
 
@@ -608,7 +608,7 @@ flowchart LR
     F5D --> F6["F6 Hardening (kill switch, alertas, retenção, RUNBOOK)"]
 ```
 
-**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A, F4B e F4UX entregues e aprovadas com minors. Próximo gate: F4OPS / Agent 12. F4C só entra após F4OPS ou skip explícito do operador.
+**Status:** F0/F1/F2/F3 entregues e aprovadas. F4A, F4B, F4UX e F4OPS entregues e aprovadas com minors. F4C só entra após formalização do workflow `staging`/`feature/*` e aprovação explícita do operador.
 
 - **F0 Fundação (1–2 dias)**: repo, Next.js 15, Supabase + pgvector, Drizzle, Auth, `runs`/`ai_usage_logs`/`cost_budgets`, `AIProvider`+`OpenAIProvider`, `assertBudget`, deploy mínimo. **Vercel Cron configurado vazio**.
 - **F1 Coleta + Storage (3–5 dias) — sem IA, sem embeddings, sem custo IA. Entrega visual: "Coleta / Raw Items / Candidatos" (não há `signals` ainda)**:
@@ -639,8 +639,8 @@ flowchart LR
 - **F4A Motor Base / Evidence Layer (5–7 dias)** — DONE (`approved_with_minors`). Owner: Agent 8 + Agent 8.5 fix ([`docs/agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md)). Motor source-agnostic + adapter `signals → evidences` + tabelas novas + scoring multi-axis + state machine + UI Funil mínima. HN-only. Source Confidence ≤ 0.40 por design.
 - **F4B Cross-source com Google Trends (4–6 dias)** — DONE (`approved_with_minors`). Owner: Agent 9 ([`docs/agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md)). Trends como segunda fonte mínima. `search_momentum`. Adapter reutilizável por cron geral, `watch_topics` e `manual_inputs`. Source Confidence pode subir para ≥ 0.65 quando há evidence externa distinta no mesmo `topic_key`; não houve overlap real GT+HN nos dados atuais, sem bloquear a fase.
 - **F4UX Funil UX / Operator Clarity (curta)** — DONE (`approved_with_minors`). Owner: Agent 10 ([`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md)). Clareza operacional do Funil antes de feedback: navegação orientada pelo MOTOR, auditabilidade de evidences, Evidence Trace, estados vazios, baixa confiança, ausência de overlap e próximos passos operacionais. Não altera motor/scoring/schema/cron.
-- **F4OPS Vercel Preview / Staging + Performance Validation (curta)** — Owner: Agent 12 ([`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md)). Valida o app hospedado em Vercel Preview/Staging, mapeia envs por ambiente, testa build/login/rotas/performance e compara com localhost. Não altera motor/scoring/schema/sources/cron e não ativa Google Trends.
-- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 11 ([`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md)). Entra após F4OPS ou skip explícito do operador. Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
+- **F4OPS Vercel Preview / Staging + Performance Validation (curta)** — DONE (`approved_with_minors`). Owner: Agent 12 ([`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md)). Validou o app hospedado em Vercel, build/login/rotas/logs/performance e confirmou que a lentidão principal era localhost/dev server. Não alterou motor/scoring/schema/sources/cron e não ativou Google Trends.
+- **F4C Feedback estruturado + Idea/Brief gates (3–5 dias)** — Owner: Agent 11 ([`docs/agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md)). Entra após formalização do workflow `staging`/`feature/*` e aprovação explícita do operador. Feedback polimórfico com `reason_code`. P-IDE-002 + P-BRF-002. Idea só de approved_opportunity, brief só de idea_allowed.
 - **F5A..F5D Source Expansion (incremental)** — ver [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Ordem: PH > Reddit > YouTube > Reviews. Cada fonte um sprint (~3-8 dias) sob aprovação caso a caso.
 - **F6 Hardening (2–3 dias)** — kill switch E2E, retries, alertas, retenção LGPD + purge, RUNBOOK, backup.
 

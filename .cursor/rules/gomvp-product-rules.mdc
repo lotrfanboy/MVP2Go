@@ -40,12 +40,13 @@ Canonical decisions: [`docs/DECISIONS.md`](mdc:docs/DECISIONS.md).
 - **Source adapter ≠ trigger** (DP-22): external source adapters produce `evidences`; cron, watch topics and manual inputs are triggers/seeds that may invoke adapters but do not count as external sources themselves.
 - **Navigation follows the MOTOR, not sources** (DP-23, D-19): main product flow is Radar → Evidences → Trends → Need Clusters → Opportunities → Ideas → Briefs. Sources are evidence infrastructure, not product menus.
 - **Preview/Staging before deeper motor/source work** (DP-24, D-20): after F4UX, validate Vercel Preview/Staging and real performance before F4C/F5 unless the operator explicitly skips F4OPS.
+- **Branch workflow after F4OPS** (O-12): `main` is production, `staging` is the fixed operator test/Preview branch, and agents work in `feature/*`. Future feature branches merge to `staging` first; `staging` merges to `main` only with explicit operator approval.
 - **Pain weighs more than trend** in `opportunity_score`.
 - **Idea only from `approved_opportunity`. Brief only from `idea_allowed`** (DP-18, D-15).
 - Reason code is **mandatory** in any gate transition on opportunities/ideas (DP-20).
 - Do not overengineer.
 
-## V2 scope (current — F4OPS in queue)
+## V2 scope (current — post-F4OPS branching/deploy workflow)
 
 Core flow:
 
@@ -64,7 +65,8 @@ Core flow:
 **In production:** Hacker News (Algolia HN Search API).
 **Implemented in F4B:** Google Trends — second minimal source for cross-source confidence. F4B is `approved_with_minors`; no real GT+HN overlap appeared, `source_confidence >= 0.65` was not demonstrated, and GT cron remains off until explicit operational approval.
 **Completed in F4UX:** Funil UX / Operator Clarity was delivered by Codex and approved_with_minors by Agent 5.
-**Current gate (F4OPS):** Vercel Preview / Staging + Performance Validation. Do not start F4C/F5 until F4OPS is approved/approved_with_minors or explicitly skipped by the operator.
+**Completed in F4OPS:** Vercel Production deploy is Ready on commit `450ca86`; F4OPS was approved_with_minors by Agent 5. The hosted app is much faster than localhost; GT cron remains off.
+**Current gate:** Formalize branching/deploy workflow (`main` production, `staging` operator test/Preview, `feature/*` work branches) before starting any new functional phase.
 **F5 roadmap (D-17):** Product Hunt > Reddit > YouTube > Reviews. One source at a time, under approval, following the `src/sources/<source>/{README, collector, normalizer}` pattern.
 **Backup (no priority):** RSS feeds, Apple RSS, Stack Exchange — only on concrete demand.
 
@@ -187,6 +189,7 @@ When coding:
 - **Never couple a new source only to cron** when watch/manual enrichment is part of the source plan; keep adapter code reusable while avoiding a premature global source framework (DP-22).
 - **Never create primary navigation menus per source** (Google Trends, Product Hunt, Reddit, YouTube, Reviews). Use generic evidence/source-confidence/source-health surfaces instead, and keep the main Funil organized by MOTOR stages (DP-23).
 - **Never use deploy/staging as implicit approval to change product behavior** (DP-24): F4OPS may validate Vercel Preview/Staging and env mapping, but it must not alter motor/scoring/schema/sources, expose secrets, or activate Google Trends cron without explicit approval.
+- **Never develop future phases directly on `main`** unless the operator explicitly says so. Use `feature/*` from `staging`, merge approved feature work into `staging` for operator testing, and promote `staging` to `main` only with approval (O-12).
 
 ## Decision rule
 

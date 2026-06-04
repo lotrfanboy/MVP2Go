@@ -7,7 +7,7 @@
 
 ## Estado atual em uma linha
 
-**F4OPS está em andamento.** Próximo passo imediato: commitar/pushar a remoção controlada de `src/app/(dashboard)/page.tsx` junto da documentação F4OPS e disparar novo Preview Deploy via Git.
+**F4OPS foi aprovada com minors pelo Agent 5.** Próximo passo imediato: commitar/pushar em `main` tudo que já foi feito até agora e formalizar o workflow `main`/`staging`/`feature/*` para as próximas features.
 
 ---
 
@@ -16,7 +16,7 @@
 - **Steps 1–9** — DONE (camada documental, git inicial, F3 entregue, Agent 5 review, F3 QA done + review). Detalhes nos handbacks.
 - **Step 10 / 10b** — DONE (PRD KPI revertido para US$ 50/mês na época, commits da F3 push em `origin/main`).
 - **Step 11C / 11C-review** — DONE (Agent 7 + Agent 5).
-- **Step 11 (rodada anterior)** — Operador escolheu **Caminho A (iniciar F4)**. Sub-decisões da rodada 7/operacional: **F4 antiga (feedback+brief) vira F4 nova (Opportunity Motor)**; F4UX foi inserida após F4B; F4OPS foi inserida após F4UX — ver D-11..D-20 e DP-24.
+- **Step 11 (rodada anterior)** — Operador escolheu **Caminho A (iniciar F4)**. Sub-decisões da rodada 7/operacional: **F4 antiga (feedback+brief) vira F4 nova (Opportunity Motor)**; F4UX foi inserida após F4B; F4OPS foi inserida após F4UX; branching `main`/`staging`/`feature/*` foi formalizado após F4OPS — ver D-11..D-20, DP-24 e O-12.
 
 ---
 
@@ -35,7 +35,7 @@ Documentos entregues nesta rodada:
 | [`docs/handback/AGENT_0_F4_REDESIGN.md`](handback/AGENT_0_F4_REDESIGN.md) | NOVO (handback desta rodada) |
 | [`docs/PRD.md`](PRD.md) | ATUALIZADO (rodada 7: §1, §3, §6, §8, §9, §10, §11, §14, §17, §18, §19, §20, §22, §24, §26, Apêndice E) |
 | [`docs/IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) | ATUALIZADO (F4 split em F4A/B/C, F5 source expansion, F6 hardening, mapa de fases atualizado) |
-| [`docs/DECISIONS.md`](DECISIONS.md) | ATUALIZADO (D-08 substituída por D-16; D-11..D-20; O-01/O-11; DP-15..DP-24) |
+| [`docs/DECISIONS.md`](DECISIONS.md) | ATUALIZADO (D-08 substituída por D-16; D-11..D-20; O-01/O-12; DP-15..DP-24) |
 | [`docs/PROJECT_STATE.md`](PROJECT_STATE.md) | ATUALIZADO (current phase = F4UX; F4B closed; F4C pausada) |
 | [`docs/AGENTS.md`](AGENTS.md) | ATUALIZADO (Agent 8/9/10/11 adicionados; Agent 0 ganha permissão escrita em PRD/architecture sob autorização explícita) |
 | [`.cursor/rules/gomvp-product-rules.mdc`](../.cursor/rules/gomvp-product-rules.mdc) | ATUALIZADO (princípios opportunity-first; nova ordem F5; D-16 cap configurável + alvo típico US$ 5 na validação F4/F5; manual/watch não elevam source confidence) |
@@ -103,11 +103,11 @@ Minors aceitos:
 
 ---
 
-## Step 16 — F4OPS com Agent 12 (atual)
+## Step 16 — F4OPS com Agent 12 (fechado)
 
 Owner: Agent 12. Tempo: curto. Brief: [`AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md).
 
-Status: IN_PROGRESS.
+Status: DONE (`approved_with_minors`) após [`F4OPS_REVIEW.md`](handback/F4OPS_REVIEW.md). O fix de home/redirect também foi aprovado com minors em [`F4OPS_HOME_REDIRECT_FIX_REVIEW.md`](handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md).
 
 Objetivo:
 
@@ -120,21 +120,56 @@ Objetivo:
 Sequência:
 
 1. ~~Ativar Agent 12 em chat dedicado.~~ Feito.
-2. Agent 12 identificou que o próximo passo é commitar a remoção de `src/app/(dashboard)/page.tsx` para novo Preview Deploy via Git.
-3. Operador/Agent 0 comita e pusha essa remoção junto da documentação F4OPS.
-4. Operador tenta novo Preview Deploy.
-5. Se a Vercel ainda falhar, usar redeploy sem build cache.
-6. Depois continuar F4OPS: env mapping, login, rotas principais, logs e performance Preview vs localhost.
-7. Agent 12 entrega `docs/handback/F4OPS_DONE.md`.
-8. Acionar Agent 5 para review F4OPS.
+2. ~~Agent 12 identificou que o próximo passo era commitar a remoção de `src/app/(dashboard)/page.tsx` para novo deploy via Git.~~ Feito no commit `450ca86`.
+3. ~~Vercel Production buildou `450ca86` como `Ready`.~~ Feito.
+4. ~~Agent 12 entregou `docs/handback/F4OPS_DONE.md`.~~ Feito.
+5. ~~Agent 5 revisou F4OPS.~~ Feito: `approved_with_minors`.
+6. ~~Agent 12 corrigiu home/redirect para `/funil/radar`.~~ Feito localmente.
+7. ~~Agent 5 revisou o fix de home/redirect.~~ Feito: `approved_with_minors`, com minor de redeploy/smoke público.
+
+Entregas confirmadas:
+
+1. Production URL: `https://mvp-2-go.vercel.app`.
+2. Deploy atual do fechamento F4OPS: `Ready`, commit `450ca86`.
+3. Build Vercel atual sem ENOENT; erro ficou no deploy anterior `343241c`.
+4. Smoke anônimo: `/login` 200; rotas protegidas redirecionam para `/login`.
+5. Logs Vercel sem 500/502/503/504 recentes.
+6. Performance hospedada muito melhor que localhost; lentidão parece majoritariamente dev server/local.
+7. GT cron continua desligado; `vercel.json` não inclui `/api/cron/collect-trends`.
+8. Motor/scoring/schema/sources/migrations/crons/envs não foram alterados.
+
+Minors preservados:
+
+1. Validação foi feita em Production nesta rodada, não em Preview/staging dedicado.
+2. Smoke autenticado profundo ainda foi limitado.
+3. Performance medida foi básica/anônima.
+4. Branch `staging` e Preview fixo ainda precisam ser formalizados.
+5. Node Vercel está em `24.x`; avaliar pin 20/22 depois, se necessário.
+6. Warning crônico Next/ESLint permanece conhecido.
 
 ---
 
-## Step 17 — F4C com Agent 11 (após F4OPS approved ou skip explícito)
+## Step 16b — Branching e deployment workflow (atual)
+
+Owner: Agent 0. Tempo: curto. Documento operacional: [`BRANCHING_AND_DEPLOYMENT.md`](operations/BRANCHING_AND_DEPLOYMENT.md).
+
+Status: IN_PROGRESS.
+
+Decisão operacional:
+
+1. Este fechamento F4OPS ainda entra direto em `main`, conforme decisão do operador.
+2. A partir das próximas features, agentes não devem trabalhar direto em `main`.
+3. Fluxo oficial: `feature/*` → `staging` → teste do operador na Vercel Preview/staging → `main`.
+4. Criar/pushar `staging` a partir de `main` após o commit atual estar limpo.
+5. Não iniciar F4M, F4C ou F5 antes da aprovação explícita do operador.
+
+---
+
+## Step 17 — F4C com Agent 11 (após branch/staging workflow aprovado)
 
 Owner: Agent 11. Tempo: 3–5 dias. Brief: [`AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md).
 
-Status: bloqueada até F4OPS ser aprovada ou o operador pular F4OPS explicitamente.
+Status: bloqueada até o workflow `staging`/`feature/*` estar formalizado e o operador aprovar explicitamente iniciar F4C.
 
 **F4 fecha após F4C `approved`.**
 
@@ -174,7 +209,7 @@ Após F5 ter cobertura mínima (≥3 fontes externas distintas em produção). K
 - [x] Criação dos briefs Agent 8/9/10.
 - [x] Atualização de PRD (rodada 7) cobrindo §1, §3, §6, §8, §9, §10, §11, §14, §17, §18, §19, §20, §22, §24, §26, Apêndice E.
 - [x] Atualização de IMPLEMENTATION_PLAN com fases novas.
-- [x] Atualização de DECISIONS com D-11..D-20 + DP-15..DP-24 + registros O-01/O-11.
+- [x] Atualização de DECISIONS com D-11..D-20 + DP-15..DP-24 + registros O-01/O-12.
 - [x] Atualização de PROJECT_STATE com fase corrente, blockers, risks, OQs.
 - [x] Atualização de AGENTS com Agent 8/9/10 e permissões expandidas do Agent 0.
 - [x] Atualização de NEXT_STEPS (este arquivo).

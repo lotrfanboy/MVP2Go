@@ -2,7 +2,7 @@
 
 > **Tipo de agente:** implementador de fase.
 > **Fase:** F4C — Feedback estruturado por nível + gates `idea_allowed` / `brief_allowed`.
-> **Pré-requisito:** F4A, F4B, F4UX e F4OPS fechadas (`approved_with_minors` ou melhor) pelo Agent 5, ou F4OPS pulada explicitamente pelo operador.
+> **Pré-requisito:** F4A, F4B, F4UX e F4OPS fechadas (`approved_with_minors` ou melhor) pelo Agent 5, workflow `staging`/`feature/*` formalizado, e aprovação explícita do operador para iniciar F4C.
 > **Owner do brief:** Agent 0.
 > **Reviewer requerido ao final:** Agent 5.
 
@@ -18,6 +18,7 @@ Você é o Agent 11. Antes de tocar uma linha:
    - [`docs/IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) (seção F4C).
    - [`docs/agents/AGENT_8_F4A_MOTOR.md`](AGENT_8_F4A_MOTOR.md), [`docs/agents/AGENT_9_F4B_TRENDS.md`](AGENT_9_F4B_TRENDS.md), [`docs/agents/AGENT_10_F4UX_FUNNEL_UI.md`](AGENT_10_F4UX_FUNNEL_UI.md), [`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](AGENT_12_F4OPS_VERCEL_STAGING.md).
    - [`docs/handback/F4A_DONE.md`](../handback/F4A_DONE.md), [`docs/handback/F4B_DONE.md`](../handback/F4B_DONE.md), [`docs/handback/F4B_REVIEW.md`](../handback/F4B_REVIEW.md), [`docs/handback/F4UX_DONE.md`](../handback/F4UX_DONE.md), [`docs/handback/F4UX_REVIEW.md`](../handback/F4UX_REVIEW.md), [`docs/handback/F4OPS_DONE.md`](../handback/F4OPS_DONE.md) e respectivos reviews.
+   - [`docs/operations/BRANCHING_AND_DEPLOYMENT.md`](../operations/BRANCHING_AND_DEPLOYMENT.md).
    - [`docs/PROJECT_STATE.md`](../PROJECT_STATE.md), [`docs/DECISIONS.md`](../DECISIONS.md), [`docs/AGENTS.md`](../AGENTS.md).
    - [`.cursor/rules/gomvp-product-rules.mdc`](../../.cursor/rules/gomvp-product-rules.mdc).
 
@@ -35,7 +36,7 @@ Implementar **F4C** conforme `docs/architecture/F4_OPPORTUNITY_MOTOR.md` §13 (F
 
 Em uma frase: **transformar `feedback` em estrutura polimórfica com reason codes, implementar gates `idea_allowed` e `brief_allowed`, criar prompts P-IDE-002 e P-BRF-002, e fechar a regra "ideia só de opportunity aprovada, brief só de idea aprovada".**
 
-Nota de contexto: F4B foi aprovada com minors sem overlap real GT+HN e com cron Google Trends desligado. Isso **não** é pré-requisito bloqueante da F4C. Agent 11 não deve reabrir F4B, ativar cron GT, alterar source confidence ou criar trabalho de source/matching. A F4UX clareou o funil antes do feedback; F4OPS deve validar ambiente hospedado/performance antes da F4C, salvo skip explícito do operador.
+Nota de contexto: F4B foi aprovada com minors sem overlap real GT+HN e com cron Google Trends desligado. Isso **não** é pré-requisito bloqueante da F4C. Agent 11 não deve reabrir F4B, ativar cron GT, alterar source confidence ou criar trabalho de source/matching. F4UX clareou o funil e F4OPS validou ambiente hospedado/performance; antes de iniciar F4C, o operador quer consolidar o fluxo `feature/*` → `staging` → `main`.
 
 ---
 

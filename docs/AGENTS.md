@@ -22,8 +22,8 @@
 - **Responsabilidade:** auditar repo, manter docs de controle sincronizadas, preparar prompts dos próximos agentes, prevenir scope creep, **redesenhar arquitetura quando o operador autorizar mudança estratégica**.
 - **Allowed scope:**
   - Ler tudo.
-  - Criar/atualizar docs em `docs/PROJECT_STATE.md`, `docs/DECISIONS.md`, `docs/AGENTS.md`, `docs/HANDOFF_TEMPLATE.md`, `docs/NEXT_STEPS.md`, `docs/agents/*.md`, `docs/handback/AGENT_0_*.md`.
-  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-20 e DP-24).
+  - Criar/atualizar docs em `docs/PROJECT_STATE.md`, `docs/DECISIONS.md`, `docs/AGENTS.md`, `docs/HANDOFF_TEMPLATE.md`, `docs/NEXT_STEPS.md`, `docs/agents/*.md`, `docs/handback/AGENT_0_*.md`, `docs/operations/*.md`.
+  - Criar/atualizar `docs/architecture/*.md` (autorizado em 2026-05-06 via redesign F4/F5 — ver D-11..D-20, O-12 e DP-24).
   - **Editar `docs/PRD.md`** apenas sob autorização explícita do operador para mudança estratégica registrada como D-XX (autorização concedida em 2026-05-06 para rodada 7 do PRD).
   - **Editar `docs/IMPLEMENTATION_PLAN.md`** quando refletir decisão registrada em DECISIONS.
   - **Editar `.cursor/rules/gomvp-product-rules.mdc`** apenas sob autorização explícita do operador para refletir princípios novos (autorização concedida em 2026-05-06).
@@ -295,8 +295,8 @@
   - Expor secrets em docs, logs ou handbacks.
   - Commit/push/PR sem aprovação.
 - **Input docs:** PRD, Implementation Plan, Project State, Decisions, Agents, F4A/F4B/F4UX handbacks/reviews, `package.json`, `vercel.json`, `.env.example`, `next.config.ts`, Cursor Rules, development/quality skills.
-- **Expected handback:** `docs/handback/F4OPS_DONE.md`.
-- **Status atual:** READY TO START.
+- **Expected handback:** [`docs/handback/F4OPS_DONE.md`](handback/F4OPS_DONE.md).
+- **Status atual:** DONE (`approved_with_minors`) após [`docs/handback/F4OPS_REVIEW.md`](handback/F4OPS_REVIEW.md). Fix de home/redirect aprovado com minors em [`docs/handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md`](handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md).
 
 ---
 
@@ -318,9 +318,9 @@
   - Adicionar fonte nova.
   - Destruir feedback existente.
   - Commit/push/PR sem aprovação.
-- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9/10/12, handbacks F4A/F4B/F4UX/F4OPS e respectivos reviews.
+- **Input docs:** PRD rodada 7, [`architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md), briefs Agent 8/9/10/12, handbacks F4A/F4B/F4UX/F4OPS e respectivos reviews, [`operations/BRANCHING_AND_DEPLOYMENT.md`](operations/BRANCHING_AND_DEPLOYMENT.md).
 - **Expected handback:** `docs/handback/F4C_DONE.md`. **F4 fecha após este handback aprovado.**
-- **Status atual:** PENDING (entra após F4OPS aprovado ou skip explícito do operador).
+- **Status atual:** PENDING (entra após workflow `staging`/`feature/*` formalizado e aprovação explícita do operador).
 
 ---
 
@@ -339,4 +339,5 @@
 | **Agent 9** | F4A aprovado | `F4B_DONE.md` | acionar Agent 5 |
 | **Agent 10 / Codex** | F4B aprovado | `F4UX_DONE.md` | acionar Agent 5 |
 | **Agent 12** | F4UX aprovado pelo Agent 5 | `F4OPS_DONE.md` | acionar Agent 5 |
-| **Agent 11** | F4OPS aprovado ou skip explícito | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |
+| **Agent 0** | F4OPS aprovado | `AGENT_0_F4OPS_BRANCHING_PLAN.md` | criar/pushar `staging` sob aprovação |
+| **Agent 11** | workflow `staging`/`feature/*` formalizado + aprovação operador | `F4C_DONE.md` (fecha F4) | acionar Agent 5 |

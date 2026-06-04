@@ -745,6 +745,8 @@ Entrega:
 - Validar build, login/auth, rotas principais e performance percebida fora do localhost.
 - Comparar Preview vs localhost para diagnosticar se a lentidão é ambiente local/dev server ou gargalo real.
 - Documentar gargalos e rollback.
+- Status final: DONE (`approved_with_minors`) após `docs/handback/F4OPS_REVIEW.md`.
+- Resultado: Vercel Production `Ready` no commit `450ca86`, app hospedado operável, performance muito melhor que localhost, GT cron desligado e nenhuma alteração em motor/scoring/schema/sources.
 
 Forbidden F4OPS:
 
@@ -788,7 +790,7 @@ Gates F4C:
 - [ ] Aprovação/rejeição obriga reason_code (validação Zod).
 - [ ] 2 ciclos de feedback movem `opportunity_score` médio do top-10.
 
-Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somente após F4C aprovado. F4C só entra após F4OPS aprovada ou skip explícito do operador.
+Saída F4C: `docs/handback/F4C_DONE.md` + revisão Agent 5. **F4 fechada** somente após F4C aprovado. F4C só entra após F4OPS aprovada, workflow `staging`/`feature/*` formalizado e aprovação explícita do operador.
 
 ---
 

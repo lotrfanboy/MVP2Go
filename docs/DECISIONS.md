@@ -159,7 +159,7 @@
 - **DP-21** **F4A é gate estrutural HN-only** (D-18): não exigir `qualified_opportunity`; não falsear volume; bloquear/rejeitar categorias incompatíveis com IndieLab antes de promover `opportunity_candidate`.
 - **DP-22** **Source adapter ≠ trigger.** Cada fonte externa deve gerar `evidences` reutilizáveis pelo motor e não ficar acoplada a um único disparador. Cron geral, `watch_topics` e `manual_inputs` podem acionar a mesma fonte quando fizer sentido. Manual/watch são seeds internas e nunca contam como fonte externa; `source_confidence` só sobe quando um adapter externo (`hn`, `gtrends`, `ph`, `reddit`, `youtube`, `reviews`) grava evidence real no mesmo `topic_key`. Não criar abstração global de sources antes de 2-3 fontes repetirem o padrão.
 - **DP-23** **Navegação orientada pelo MOTOR, não por source** (D-19): o produto organiza o operador pelo fluxo Radar → Evidências → Tendências → Dores agrupadas → Oportunidades → Ideias → Briefs. Fontes externas são infraestrutura/auditabilidade; não criar menus principais por Google Trends/Product Hunt/Reddit/YouTube/Reviews.
-- **DP-24** **Preview/Staging antes de novas mudanças profundas** (D-20): `main` representa produção; branches de feature devem gerar Preview Deploy para validar UI/performance antes do merge. Deploy/staging não autoriza ativar cron GT, expor secrets, aplicar migrations, alterar motor/scoring/schema ou iniciar F4C/F5. Variáveis de ambiente devem ser separadas por Production/Preview/Development e documentadas por nome, nunca por valor.
+- **DP-24** **Preview/Staging antes de novas mudanças profundas** (D-20): `main` representa produção; branches de feature devem gerar Preview Deploy para validar UI/performance antes do merge. Após o fechamento F4OPS, agentes trabalham em `feature/*`, integram em `staging` para teste do operador e só promovem para `main` com aprovação explícita. Deploy/staging não autoriza ativar cron GT, expor secrets, aplicar migrations, alterar motor/scoring/schema ou iniciar F4C/F5. Variáveis de ambiente devem ser separadas por Production/Preview/Development e documentadas por nome, nunca por valor.
 
 ---
 
@@ -265,6 +265,20 @@
   - Secrets reais nunca entram em docs, handbacks ou logs.
   - `GTRENDS_ENABLED`/BigQuery e `/api/cron/collect-trends` permanecem desligados até aprovação explícita.
   - Performance deve ser comparada entre Vercel Preview e localhost antes de propor correções.
+
+### O-12 — Branching oficial após F4OPS
+- **Status:** Em vigor desde 2026-06-04.
+- **Contexto:** F4OPS validou produção Vercel e resolveu o blocker de deploy. O operador decidiu que todo o trabalho já feito até aqui pode entrar em `main`; o novo esquema de branches passa a valer a partir das próximas features.
+- **Decisão:** Adotar workflow oficial:
+  - `main` = produção e Production Deploy da Vercel.
+  - `staging` = branch fixa de homologação/teste do operador, com Preview Deploy recorrente/fixo na Vercel.
+  - `feature/*` = branches de trabalho para Codex/Cursor/agentes, uma feature/fase por branch.
+- **Implicação:**
+  - Agentes não devem desenvolver fases grandes diretamente em `main` após este fechamento F4OPS.
+  - Features aprovadas entram em `staging`; operador testa na URL Preview/staging.
+  - `staging` só entra em `main` quando o operador quiser promover para produção.
+  - `staging` pode usar Supabase dev atual temporariamente; ambiente dedicado fica para decisão futura se houver risco.
+  - Commit/push/merge continuam exigindo aprovação explícita.
 
 ---
 

@@ -1,7 +1,7 @@
 # GoMVP V1 — Implementation Plan
 
 > **Versão:** 1.1 (rodada 7 do PRD).
-> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4A, F4B e F4UX concluídas (`approved_with_minors`)**. F4OPS entra antes da F4C para validar Vercel Preview/Staging e performance real. F5 segue como Source Expansion (PH > Reddit > YouTube > Reviews). Hardening fica em F6. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
+> **Status:** F0/F1/F2/F3 concluídas (`approved_with_minors` em todas). **F4A, F4B, F4UX e F4OPS concluídas (`approved_with_minors`)**. Antes da próxima fase funcional, formalizar `staging`/`feature/*` para Preview/staging. F5 segue como Source Expansion (PH > Reddit > YouTube > Reviews). Hardening fica em F6. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](PROJECT_STATE.md).
 > **Fonte canônica:** [`docs/PRD.md`](PRD.md). Detalhes de arquitetura F4: [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architecture/F4_OPPORTUNITY_MOTOR.md). Roadmap F5: [`docs/architecture/F5_SOURCE_EXPANSION.md`](architecture/F5_SOURCE_EXPANSION.md). Em qualquer divergência, o **PRD vence**.
 
 ---
@@ -55,7 +55,13 @@ Aplicam-se a **todas as fases** e nunca podem ser violados sem aprovação escri
 
 ### Branching e commits
 
-- F0 não usa git. A partir de F1, recomenda-se `main` + branches por fase (`f1-coleta-hn`, etc.). Decisão final fica com o operador.
+- Após F4OPS, o fluxo oficial é:
+  - `main` = produção e Vercel Production Deploy.
+  - `staging` = homologação/teste fixo do operador com Preview Deploy recorrente.
+  - `feature/*` = branches de trabalho dos agentes, uma feature/fase por branch.
+- Este fechamento F4OPS ainda entra direto em `main` por decisão explícita do operador; o novo branching vale para próximas features.
+- Agentes devem declarar a branch antes de iniciar e não trabalhar direto em `main` em fases grandes sem aprovação explícita.
+- Features aprovadas entram em `staging`; o operador testa; `staging` só entra em `main` quando o operador quiser promover para produção.
 - Mensagens de commit em PT ou EN, imperativo, escopo claro: `feat(collectors): add algolia HN paginated fetcher`.
 - Commits **só com aprovação humana**.
 
@@ -310,7 +316,7 @@ Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architec
 
 ## F4OPS — Vercel Preview / Staging + Performance Validation
 
-**Owner:** Agent 12 ([`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md)). **Tempo estimado:** fase curta.
+**Owner:** Agent 12 ([`docs/agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md)). **Status:** DONE (`approved_with_minors`) após [`docs/handback/F4OPS_REVIEW.md`](handback/F4OPS_REVIEW.md). **Tempo estimado:** fase curta.
 
 ### Entregáveis (resumo)
 
@@ -322,19 +328,21 @@ Ver detalhes técnicos em [`docs/architecture/F4_OPPORTUNITY_MOTOR.md`](architec
 - Performance percebida comparada entre Vercel Preview e localhost.
 - Gargalos documentados com propostas de correção, sem mexer em motor/scoring/schema/sources.
 - Checklist de rollback documentado.
+- Fix pós-review: `/funil/radar` passa a ser home operacional principal; `/dashboard` permanece legado/F3.
 
 ### Gates F4OPS
 
-- [ ] Projeto builda na Vercel Preview.
-- [ ] App abre em URL pública de Preview.
-- [ ] Login funciona.
-- [ ] Rotas principais carregam: `/funil/radar`, `/funil/opportunities`, detalhe de opportunity quando houver dados, `/funil/evidencias` ou equivalente de Evidence Trace, `/funil/trends`, `/funil/need-clusters`, `/funil/manual`, `/funil/watch-topics` e pelo menos uma tela de Sistema/Admin.
-- [ ] Não há tela branca nem erro crítico de console/server logs.
-- [ ] Navegação entre telas é aceitável e comparada com localhost.
-- [ ] Gargalos de performance são documentados.
-- [ ] Cron Google Trends continua desligado.
-- [ ] Secrets não aparecem em docs/logs.
-- [ ] Motor/scoring/schema/migrations/sources não foram alterados.
+- [x] Projeto builda na Vercel Production em `main` (commit `450ca86`) e deploy está `Ready`.
+- [x] App abre em URL pública: `https://mvp-2-go.vercel.app`.
+- [x] Login/rotas protegidas funcionam no nível validado: `/login` 200, redirects anônimos e logs autenticados 200.
+- [x] Rotas principais carregam sem 5xx recentes nos logs Vercel.
+- [x] Não há tela branca nem erro crítico de server logs no smoke.
+- [x] Navegação/performance comparada com localhost; Vercel muito mais rápida.
+- [x] Gargalos documentados: lentidão parece majoritariamente localhost/dev server.
+- [x] Cron Google Trends continua desligado.
+- [x] Secrets não aparecem em docs/logs.
+- [x] Motor/scoring/schema/migrations/sources não foram alterados.
+- [ ] Branch `staging` fixa e Preview recorrente ainda precisam ser criados/validados antes das próximas features.
 
 ---
 
@@ -402,6 +410,7 @@ F0 → F1 → F2 → F3 → (DONE até aqui)
    → F4B (Google Trends, cross-source) → Agent 5 → approved
    → F4UX (funil UX / operator clarity) → Agent 5 → approved
    → F4OPS (Vercel Preview / staging + performance) → Agent 5 → approved
+   → Branch workflow (main/staging/feature) → operador aprova
    → F4C (feedback + idea/brief gates) → Agent 5 → approved  [F4 fechada]
    → F5A (Product Hunt) → Agent 5 → approved
    → F5B (Reddit) → Agent 5 → approved

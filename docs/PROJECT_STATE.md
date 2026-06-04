@@ -15,12 +15,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Current phase** | F4OPS — Vercel Preview / Staging + Performance Validation (em andamento) |
-| **Last completed phase** | F4UX — Funil UX / Operator Clarity, aprovado com minors após review Agent 5 |
-| **Active agent** | Agent 12 (próximo) — F4OPS Vercel Preview / Staging |
-| **Last reviewer agent** | Agent 5 — revisou F4UX como `approved_with_minors` em [`handback/F4UX_REVIEW.md`](handback/F4UX_REVIEW.md). |
+| **Current phase** | Pós-F4OPS — Branching/Deployment workflow |
+| **Last completed phase** | F4OPS — Vercel Preview / Staging + Performance Validation, aprovado com minors após review Agent 5 |
+| **Active agent** | Agent 0 — encerramento F4OPS + formalização de `main`/`staging`/`feature/*` |
+| **Last reviewer agent** | Agent 5 — revisou F4OPS como `approved_with_minors` em [`handback/F4OPS_REVIEW.md`](handback/F4OPS_REVIEW.md) e o fix de home/redirect em [`handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md`](handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md). |
 | **Current branch** | `main` |
-| **Last updated** | 2026-06-02 (F4OPS em andamento; commit controlado para novo Preview Deploy) |
+| **Last updated** | 2026-06-04 (F4OPS approved_with_minors; branching/deploy workflow em formalização) |
 
 ## Status por fase
 
@@ -33,8 +33,8 @@
 | **F4A — Motor + Evidence Layer (HN-only)** | [`agents/AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md) + fix [`agents/AGENT_8_5_F4A_FIX.md`](agents/AGENT_8_5_F4A_FIX.md) | [`handback/F4A_DONE.md`](handback/F4A_DONE.md) + [`handback/F4A_FIX_DONE.md`](handback/F4A_FIX_DONE.md) | [`handback/F4A_REVIEW.md`](handback/F4A_REVIEW.md) + [`handback/F4A_FIX_REVIEW.md`](handback/F4A_FIX_REVIEW.md) | DONE (`approved_with_minors`) |
 | **F4B — Cross-source Google Trends** | [`agents/AGENT_9_F4B_TRENDS.md`](agents/AGENT_9_F4B_TRENDS.md) | [`handback/F4B_DONE.md`](handback/F4B_DONE.md) + checkpoints GT | [`handback/F4B_REVIEW.md`](handback/F4B_REVIEW.md) | DONE (`approved_with_minors`) |
 | **F4UX — Funil UX / Operator Clarity** | [`agents/AGENT_10_F4UX_FUNNEL_UI.md`](agents/AGENT_10_F4UX_FUNNEL_UI.md) | [`handback/F4UX_DONE.md`](handback/F4UX_DONE.md) | [`handback/F4UX_REVIEW.md`](handback/F4UX_REVIEW.md) | DONE (`approved_with_minors`) |
-| **F4OPS — Vercel Preview / Staging + Performance Validation** | [`agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md) | — | — | IN_PROGRESS |
-| **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md) | — | — | PENDING (após F4OPS ou skip explícito do operador) |
+| **F4OPS — Vercel Preview / Staging + Performance Validation** | [`agents/AGENT_12_F4OPS_VERCEL_STAGING.md`](agents/AGENT_12_F4OPS_VERCEL_STAGING.md) | [`handback/F4OPS_DONE.md`](handback/F4OPS_DONE.md) + [`handback/F4OPS_HOME_REDIRECT_FIX.md`](handback/F4OPS_HOME_REDIRECT_FIX.md) | [`handback/F4OPS_REVIEW.md`](handback/F4OPS_REVIEW.md) + [`handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md`](handback/F4OPS_HOME_REDIRECT_FIX_REVIEW.md) | DONE (`approved_with_minors`) |
+| **F4C — Feedback + Idea/Brief gates** | [`agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md) | — | — | PENDING (após formalizar branch/staging workflow e aprovação explícita do operador) |
 | F5A — Product Hunt | a definir | — | — | PENDING (após F4C) |
 | F5B — Reddit | a definir | — | — | PENDING |
 | F5C — YouTube | a definir | — | — | PENDING |
@@ -70,7 +70,7 @@ Evidência cruzada com handbacks e arquivos no repositório:
 - Layout responsivo até `max-w-[1440px]`.
 - Fallback global de loading/error em `(dashboard)/loading.tsx` e `(dashboard)/error.tsx`.
 - `src/app/icon.tsx` adicionado para eliminar 404 de favicon.
-- `src/app/dashboard/page.tsx` antigo **removido** (rota duplicada). `(dashboard)/page.tsx` agora redireciona para `/dashboard`.
+- `src/app/dashboard/page.tsx` antigo **removido** (rota duplicada). Em F4OPS, `src/app/(dashboard)/page.tsx` também foi removido por duplicar a raiz `/`; `src/app/page.tsx` controla o redirect principal e `/dashboard` segue em `src/app/(dashboard)/dashboard/page.tsx`.
 
 **15 rotas implementadas no grupo `(dashboard)`:**
 
@@ -118,7 +118,7 @@ Evidência cruzada com handbacks e arquivos no repositório:
 - Nova pasta `docs/architecture/` criada com `F4_OPPORTUNITY_MOTOR.md` e `F5_SOURCE_EXPANSION.md`.
 - Briefs de implementação F4: `agents/AGENT_8_F4A_MOTOR.md`, `agents/AGENT_9_F4B_TRENDS.md`, `agents/AGENT_11_F4C_FEEDBACK.md`; F4UX adiciona `agents/AGENT_10_F4UX_FUNNEL_UI.md`.
 - PRD atualizado para rodada 7 (visão idea→opportunity, fluxo evidence layer, scoring multi-axis, KPI custo IA US$ 5/mês, plano F4A/B/C + F5 source expansion + F6 hardening).
-- DECISIONS atualizado com **D-11..D-20** e princípios **DP-15..DP-24** (opportunity-first, evidence layer, scoring multi-axis, cross-source obrigatório, gates+reasons, cap configurável, nova ordem de fontes, F4A estrutural, source adapter ≠ trigger, navegação orientada pelo MOTOR e Preview/Staging antes de novas mudanças profundas). **D-08 substituída** por D-16. **O-01/O-11** registrados.
+- DECISIONS atualizado com **D-11..D-20** e princípios **DP-15..DP-24** (opportunity-first, evidence layer, scoring multi-axis, cross-source obrigatório, gates+reasons, cap configurável, nova ordem de fontes, F4A estrutural, source adapter ≠ trigger, navegação orientada pelo MOTOR e Preview/Staging antes de novas mudanças profundas). **D-08 substituída** por D-16. **O-01/O-12** registrados.
 - IMPLEMENTATION_PLAN reescrito com fases novas.
 - AGENTS.md atualizado com Agent 8/9/10/11.
 - Handback do redesign em `handback/AGENT_0_F4_REDESIGN.md`.
@@ -128,12 +128,15 @@ Evidência cruzada com handbacks e arquivos no repositório:
 1. ~~F4A implementada e corrigida.~~ **Aprovada com minors** após Agent 8.5 + review Agent 5.
 2. ~~F4B implementada e revisada.~~ **Aprovada com minors** após Agent 9 + review Agent 5.
 3. ~~F4UX implementada pelo Codex e revisada pelo Agent 5.~~ **Aprovada com minors** em [`handback/F4UX_REVIEW.md`](handback/F4UX_REVIEW.md).
-4. Antes de F4C/F5, executar **F4OPS** para validar Vercel Preview/Staging, performance real e fluxo branch → preview → main/produção.
-5. F4OPS identificou a primeira ação necessária para destravar Vercel Preview: remover `src/app/(dashboard)/page.tsx` (rota raiz duplicada/redirect legado) e gerar novo Preview Deploy via Git. Se a Vercel ainda falhar, tentar redeploy sem build cache.
+4. ~~Antes de F4C/F5, executar **F4OPS** para validar Vercel Preview/Staging, performance real e fluxo branch → preview → main/produção.~~ **F4OPS aprovada com minors** em 2026-06-04.
+5. F4OPS validou Production URL `https://mvp-2-go.vercel.app`, commit `450ca86`, deploy `Ready`, build Vercel sem ENOENT, login/redirects básicos, rotas protegidas, logs sem 5xx recentes e performance muito melhor que localhost.
+6. F4OPS confirmou que a lentidão principal parece ligada ao localhost/dev server, não ao app hospedado.
+7. Fix pós-review definiu `/funil/radar` como home operacional principal no código local; `/dashboard` segue como rota legada/F3. Review Agent 5 aprovou o fix com minor: precisa novo deploy/smoke público para confirmar a URL pública com o comportamento novo.
+8. Novo fluxo de branches/deploy passa a valer para próximas features: `main` = produção, `staging` = teste/homologação fixo, `feature/*` = trabalho de agentes.
 
 ## Reviews pendentes
 
-Nenhuma review pendente. Próxima review: F4OPS após handback do Agent 12.
+Nenhuma review de fase pendente. Antes de qualquer fase funcional nova, formalizar/pushar o workflow `staging`/`feature/*` e validar Preview da branch `staging`.
 
 ## Blockers conhecidos
 
@@ -146,8 +149,9 @@ Nenhuma review pendente. Próxima review: F4OPS após handback do Agent 12.
 - **B-07** — ~~Rodada 7 do PRD ainda não commitada em git.~~ **Resolvido**: documentação rodada 7 commitada/pushada antes de iniciar Agent 8.
 - **B-08** — ~~F4A rejected / gate oficial precisava ajuste.~~ **Resolvido** por D-18 + Agent 8.5: F4A aprovada com minors; F4B também já foi concluída.
 - **B-09** — ~~F4B dependia de Google Trends como segunda fonte mínima.~~ **Resolvido** por Agent 9 + review Agent 5: F4B aprovada com minors; `source_confidence >= 0.65` não foi demonstrado por falta de overlap real GT+HN, mas isso é meta operacional, não blocker absoluto.
-- **B-10** — Localhost/Next dev instável e lento para uso operacional. **Mitigação em andamento:** F4OPS valida Vercel Preview/Staging para separar problema de ambiente local de gargalo real do app.
-- **B-11** — Preview Deploy inicial precisa validar remoção de rota raiz duplicada/redirect legado. **Mitigação em andamento:** commit controlado remove `src/app/(dashboard)/page.tsx`; próximo deploy deve vir do Git. Se falhar, redeploy sem build cache.
+- **B-10** — ~~Localhost/Next dev instável e lento para uso operacional.~~ **Mitigado por F4OPS:** Vercel Production ficou muito mais rápida; localhost/dev server permanece lento, mas não bloqueia uso hospedado.
+- **B-11** — ~~Preview Deploy inicial precisava validar remoção de rota raiz duplicada/redirect legado.~~ **Resolvido por F4OPS:** commit `450ca86` buildou na Vercel sem ENOENT.
+- **B-12** — Branch `staging` fixa e Preview recorrente ainda não existem. **Mitigação:** documentar workflow agora e criar/pushar `staging` depois do commit atual em `main`, antes da próxima feature.
 
 ## Riscos conhecidos
 
@@ -171,25 +175,26 @@ Nenhuma review pendente. Próxima review: F4OPS após handback do Agent 12.
 - **R-18** **F4B sem overlap real GT+HN** — aceito como minor em `F4B_REVIEW.md`: BigQuery Top/Rising inseriu `gtrends:search_momentum`, mas não cruzou com HN/need clusters atuais. Não falsear dados; `source_confidence >= 0.65` fica dependente de dados/match futuro.
 - **R-19** **Cron Google Trends desligado** — decisão prudente: `/api/cron/collect-trends` existe e é protegido por `CRON_SECRET`, mas não está em `vercel.json` até decisão operacional sobre custo/cadência/caps.
 - **R-20** ~~Funil operacional confuso antes de feedback.~~ **Mitigado** por F4UX; Agent 5 aprovou com minors.
-- **R-21** **Performance real desconhecida fora do localhost** — F4OPS deve comparar Vercel Preview vs localhost, documentar gargalos e só propor correções de performance sem mexer em motor/scoring/schema.
-- **R-22** **Deploy acionar automações indevidas** — F4OPS deve manter cron Google Trends desligado, preservar crons atuais sem mudança não aprovada e nunca expor secrets em docs/logs.
+- **R-21** ~~Performance real desconhecida fora do localhost~~ — **Mitigado por F4OPS**: Vercel Production respondeu muito melhor que localhost em smoke básico; manter monitoramento em staging.
+- **R-22** **Deploy acionar automações indevidas** — F4OPS manteve cron Google Trends desligado e não alterou `vercel.json`, envs, motor, schema, sources ou migrations. Risco permanece para futuras mudanças de deploy.
+- **R-23** **Feature futura ir direto para produção** — mitigação nova: agentes devem trabalhar em `feature/*`, mergear em `staging` para Preview/staging e só promover para `main` com aprovação do operador.
+- **R-24** **Node Vercel 24.x automático** — minor F4OPS. Avaliar pin explícito de Node 20/22 em tarefa operacional separada, se a variabilidade virar problema.
 
 ## Próxima ação recomendada
 
-1. Commitar e pushar documentação F4OPS + remoção controlada de `src/app/(dashboard)/page.tsx` em `main`.
-2. Fazer novo Preview Deploy via Git na Vercel.
-3. Se a Vercel ainda falhar, rodar redeploy sem build cache.
-4. Depois continuar validação F4OPS: build, login, rotas, logs e performance Preview vs localhost.
-5. Após F4OPS `approved` ou `approved_with_minors`, ativar **Agent 11 / F4C** com [`agents/AGENT_11_F4C_FEEDBACK.md`](agents/AGENT_11_F4C_FEEDBACK.md), salvo se o operador pular F4OPS explicitamente.
+1. Commitar e pushar em `main` tudo que já foi feito até o fechamento F4OPS: handbacks/reviews, docs, fix de home/redirect para `/funil/radar`.
+2. Após `main` limpo, criar/pushar branch `staging` a partir de `main` e configurar/validar Preview recorrente da Vercel para `staging`.
+3. A partir da próxima feature, agentes trabalham em `feature/*`, mergeiam em `staging` para teste do operador, e só então `staging` entra em `main` com aprovação explícita.
+4. Não iniciar F4M, F4C ou F5 até o operador aprovar a próxima fase funcional.
 
 ## Do Not Do Yet
 
 Bloqueios duros até nova aprovação:
 
-- Nenhuma fase futura adiantada antes de F4OPS (F4C, F5x, F6 só nas suas vezes), salvo skip explícito do operador.
+- Nenhuma fase futura adiantada antes da formalização do workflow `staging`/`feature/*` e aprovação explícita do operador (F4M, F4C, F5x, F6 só nas suas vezes).
 - Nenhuma fonte nova além das já implementadas; F4UX não cria collectors nem integrações.
 - Não ativar cron Google Trends em `vercel.json` até decisão operacional explícita.
-- Não configurar Vercel, Railway ou secrets neste chat Agent 0.
+- Não configurar Vercel, Railway ou secrets neste chat Agent 0; apenas documentar workflow e comandos.
 - Nenhuma migration nova sem SQL preview + **aprovação humana explícita e específica daquela migration** (Q-G).
 - Nenhuma alteração em prompts `001` já em produção (P-EXT/P-FIL/P-CLU/P-IDE/P-BRF). Para mudar, criar versão `002`. P-EVI/P-TRD/P-OPP/P-IDE-002/P-BRF-002 entram como **arquivos novos** versão `001`.
 - Nenhuma chamada IA fora dos pipelines existentes que ignore `assertBudget()`.
@@ -206,8 +211,9 @@ Bloqueios duros até nova aprovação:
 - OQ-10 — ~~**Backfill retroativo `signals → evidences` em F4A?**~~ **Fechada (operador 2026-05-09):** F4A processa **apenas sinais novos**; **sem** backfill retroativo. Backfill futuro = job manual opcional com dry-run e **aprovação separada** (ver [`AGENT_8_F4A_MOTOR.md`](agents/AGENT_8_F4A_MOTOR.md), RF-24).
 - OQ-11 — **Cadência de `/api/cron/collect-trends`**: F4B manteve cron GT desligado. Decisão futura: ativar ou não em `vercel.json`, com qual cadência e cap BigQuery.
 - OQ-14 — **Lookup de tópico arbitrário em Trends**: BigQuery public dataset cobre apenas Top/Rising. Provider alternativo oficial/pago só entra com aprovação futura específica; F4UX/F4C não devem reabrir isso.
-- OQ-15 — **Ambiente de dados do Preview/Staging:** F4OPS deve decidir com o operador se Preview usa Supabase dev existente ou projeto/branch dedicado, sem tocar produção por padrão.
-- OQ-16 — **Causa da lentidão:** F4OPS deve comparar Vercel Preview vs localhost para separar problema de dev server/cache/conexão de gargalo real do app.
+- OQ-15 — ~~Ambiente de dados do Preview/Staging~~ **Fechada temporariamente em F4OPS:** usar Supabase dev atual para Preview/Staging por enquanto; reavaliar se houver risco operacional.
+- OQ-16 — ~~Causa da lentidão~~ **Mitigada em F4OPS:** lentidão parece majoritariamente localhost/dev server.
+- OQ-17 — **Criação da branch `staging`:** criar a partir de `main` após o commit atual e validar Preview recorrente na Vercel antes da próxima feature.
 - OQ-12 — **Quando `/coleta` legada some?** Mantida em F4A. Considerar deprecar em F5+ se redundante com `/funil/manual` + `/funil/source-confidence`.
 - OQ-13 — **F4A inclui badge `LEGADO` em quais telas exatamente?** Sugestão Agent 0: Dashboard, Ranking, Filtradas, Detalhe da Ideia, Brief MVP, Sinais, Clusters. Não em Custos, Configurações, Fontes, Pesos, Blacklist, Prompts (são compartilhadas legado+novo). Confirmar em F4A.
 

@@ -3,7 +3,7 @@
 Motor interno de oportunidades B2C da Built2Go.
 Coleta sinais públicos, normaliza evidências (`evidences`), agrupa dores em `need_clusters`, gera `opportunity_cards` com scoring multi-axis e só permite ideias/briefs após gates humanos.
 
-> **Status atual:** F0/F1/F2/F3 concluídas. **F4A/F4B/F4UX aprovadas com minors**; **F4OPS / Agent 12 está em andamento** para Vercel Preview/Staging + validação de performance antes da F4C. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
+> **Status atual:** F0/F1/F2/F3 concluídas. **F4A/F4B/F4UX/F4OPS aprovadas com minors**; próximo passo é formalizar `staging`/`feature/*` antes de iniciar qualquer nova fase funcional. Para o estado vivo do projeto, ver [`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md).
 
 ## Stack
 
@@ -111,6 +111,7 @@ src/
 - `prompt_version` é salvo em cada chamada (tabela `prompts` nasce em F2).
 - Teto de IA: **`cost_budgets` + ENV** (ex.: `AI_MONTHLY_BUDGET_USD`). Na validação F4/F5 o alvo operacional típico documentado é US$ 5/mês (D-16) — valor efetivo sempre configurável, não hardcoded no código. Thresholds fixos sobre o budget vigente: 0.80 (warning) / 0.90 (auto-stop em cron) / 1.00 (hard-stop).
 - Sem commit, push ou PR sem aprovação humana explícita.
+- Branching a partir das próximas features: `main` = produção, `staging` = homologação/Preview fixo, `feature/*` = trabalho de agentes. Ver [`docs/operations/BRANCHING_AND_DEPLOYMENT.md`](docs/operations/BRANCHING_AND_DEPLOYMENT.md).
 
 ## Documentação
 

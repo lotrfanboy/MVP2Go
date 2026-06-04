@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { createClient } from "@/lib/supabase/server";
 
+const HOME_ROUTE = "/funil/radar" as Route;
+
 export type LoginState = {
   error: string | null;
 };
@@ -26,5 +28,5 @@ export async function signInAction(
     return { error: error.message };
   }
 
-  redirect("/dashboard" as Route);
+  redirect(HOME_ROUTE);
 }

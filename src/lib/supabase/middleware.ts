@@ -1,6 +1,26 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const HOME_PATH = "/funil/radar";
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/funil",
+  "/blacklist",
+  "/brief",
+  "/clusters",
+  "/coleta",
+  "/configuracoes",
+  "/custos",
+  "/filtradas",
+  "/fontes",
+  "/ideias",
+  "/pesos",
+  "/prompts",
+  "/ranking",
+  "/runs",
+  "/sinais",
+];
+
 export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -31,17 +51,20 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
-  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const isRootRoute = request.nextUrl.pathname === "/";
+  const isProtectedRoute = PROTECTED_PREFIXES.some(
+    (prefix) => request.nextUrl.pathname === prefix || request.nextUrl.pathname.startsWith(`${prefix}/`),
+  );
 
-  if (!user && isDashboardRoute) {
+  if (!user && (isRootRoute || isProtectedRoute)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && (isAuthRoute || isRootRoute)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = HOME_PATH;
     return NextResponse.redirect(url);
   }
 
